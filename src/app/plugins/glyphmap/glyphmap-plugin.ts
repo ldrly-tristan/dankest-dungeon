@@ -55,7 +55,7 @@ export class GlyphmapPlugin extends Phaser.Plugins.BasePlugin {
       bg
     );
 
-    self['displayList'].add(glyphmap['image']);
+    self['displayList'].add(glyphmap);
     self['updateList'].add(glyphmap);
 
     return glyphmap;
@@ -111,7 +111,7 @@ export class GlyphmapPlugin extends Phaser.Plugins.BasePlugin {
       config.add = addToScene;
     }
 
-    Phaser.GameObjects.BuildGameObject(self['scene'], glyphmap['image'], config);
+    Phaser.GameObjects.BuildGameObject(self['scene'], glyphmap, config);
 
     return glyphmap;
   };

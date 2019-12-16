@@ -15,6 +15,7 @@ export class BootScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    console.log(this);
+    // Stop boot scene and start load scene.
+    this.scene.start(SceneKey.Load);
   }
 }

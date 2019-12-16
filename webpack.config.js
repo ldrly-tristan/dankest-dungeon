@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
-const TypedocWebpackPlugin = require('typedoc-webpack-plugin');
+//const TypedocWebpackPlugin = require('typedoc-webpack-plugin');
 const webpack = require('webpack');
 
 const nodeEnv = process.env.NODE_ENV || 'development';
@@ -91,11 +91,11 @@ module.exports = {
         viewport: 'width=device-width, initial-scale=1'
       }
     }),
-    new TypedocWebpackPlugin({
+    /*new TypedocWebpackPlugin({
       name: 'Dankest Dungeon',
       mode: 'file',
       out: '../docs'
-    }),
+    }),*/
     isProd
       ? new MiniCssExtractPlugin({
           filename: '[name].[contenthash].css',

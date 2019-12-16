@@ -5,5 +5,5 @@ export enum SceneKey {
   Boot = 'Boot',
   Load = 'Load',
   Title = 'Title',
-  Play = 'Play'
+  Root = 'Root'
 }

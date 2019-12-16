@@ -6,11 +6,11 @@ import { glyphmapConfigDefault } from './glyphmap-config-default';
 /**
  * Glyphmap.
  */
-export class Glyphmap extends Phaser.GameObjects.GameObject {
+export class Glyphmap extends Phaser.GameObjects.Image {
   /**
-   * UUID.
+   * Texture key.
    */
-  public readonly uuid = Phaser.Math.RND.uuid();
+  public readonly textureKey = Phaser.Math.RND.uuid();
 
   /**
    * rot-js rect display reference.
@@ -21,16 +21,6 @@ export class Glyphmap extends Phaser.GameObjects.GameObject {
    * Canvas texture reference.
    */
   protected canvasTexture: Phaser.Textures.CanvasTexture;
-
-  /**
-   * Image reference.
-   */
-  protected image: Phaser.GameObjects.Image;
-
-  /**
-   * Dirty cell flag(s).
-   */
-  protected dirty: boolean | { [pos: string]: boolean };
 
   /**
    * Instantiate glyphmap.
@@ -66,7 +56,7 @@ export class Glyphmap extends Phaser.GameObjects.GameObject {
     fg?: string,
     bg?: string
   ) {
-    super(scene, 'Glyphmap');
+    super(scene, x || 0, y || 0, undefined);
 
     const options = {
       width: width === undefined ? glyphmapConfigDefault.width : width,
@@ -85,9 +75,9 @@ export class Glyphmap extends Phaser.GameObjects.GameObject {
     this.rotRectDisplay = new RotRectDisplay();
     this.rotRectDisplay.setOptions(options as DisplayOptions);
 
-    this.canvasTexture = scene.textures.addCanvas(this.uuid, this.rotRectDisplay._ctx.canvas);
+    this.canvasTexture = scene.textures.addCanvas(this.textureKey, this.rotRectDisplay._ctx.canvas);
 
-    this.image = new Phaser.GameObjects.Image(scene, x || 0, y || 0, this.uuid).setOrigin(0);
+    this.setTexture(this.textureKey);
 
     this.setDataEnabled();
   }
@@ -95,9 +85,63 @@ export class Glyphmap extends Phaser.GameObjects.GameObject {
   /**
    * Clear glyphmap content.
    */
-  public clear(): void {
+  public clear(): this {
     this.data.reset();
-    this.dirty = true;
+    this.data.set('dirty', true);
+
+    return this;
+  }
+
+  /**
+   * Destroys this Game Object removing it from the Display List and Update List and
+   * severing all ties to parent resources.
+   *
+   * Also removes itself from the Input Manager and Physics Manager if previously enabled.
+   *
+   * Use this to remove a Game Object from your game if you don't ever plan to use it again.
+   * As long as no reference to it exists within your own code it should become free for
+   * garbage collection by the browser.
+   *
+   * If you just want to temporarily disable an object then look at using the
+   * Game Object Pool instead of destroying it, as destroyed objects cannot be resurrected.
+   *
+   * @param fromScene Is this Game Object being destroyed as the result of a Scene shutdown? Default false.
+   */
+  public destroy(fromScene?: boolean): void {
+    super.destroy(fromScene);
+
+    this.canvasTexture.destroy();
+
+    delete this.canvasTexture;
+    delete this.rotRectDisplay;
+  }
+
+  /**
+   * Update glyphmap canvas texture.
+   */
+  public preUpdate(): void {
+    const dirty = this.data.get('dirty');
+
+    if (!dirty) {
+      return;
+    }
+
+    if (dirty === true) {
+      // Redraw all cached data.
+      this.rotRectDisplay.clear();
+      this.data.each((parent: Glyphmap, key: string, value: DisplayData) => this.draw(value, false));
+    } else {
+      // Draw only dirty cells
+      for (const key in dirty) {
+        this.draw(this.data.get(key), true);
+      }
+    }
+
+    this.data.set('dirty', false);
+
+    if (this.scene.sys.renderer.type === Phaser.WEBGL) {
+      this.canvasTexture.refresh();
+    }
   }
 
   /**
@@ -109,7 +153,7 @@ export class Glyphmap extends Phaser.GameObjects.GameObject {
    * @param fg Forefround color.
    * @param bg Background color.
    */
-  public putGlyphAt(x: number, y: number, ch: string | string[], fg: string, bg: string): DisplayData {
+  public putGlyphAt(x: number, y: number, ch: string | string[], fg?: string, bg?: string): DisplayData {
     if (!fg) {
       fg = this.rotRectDisplay._options.fg;
     }
@@ -123,47 +167,22 @@ export class Glyphmap extends Phaser.GameObjects.GameObject {
 
     this.data.set(key, value);
 
-    if (this.dirty === true) {
-      // will already redraw everything
+    let dirty = this.data.get('dirty');
+
+    if (dirty === true) {
+      // Will already redraw everything.
       return value;
     }
 
-    if (!this.dirty) {
-      // first!
-      this.dirty = {};
+    if (!dirty) {
+      // First!
+      dirty = {};
     }
 
-    this.dirty[key] = true;
+    dirty[key] = true;
+    this.data.set('dirty', dirty);
 
     return value;
-  }
-
-  /**
-   * Update glyphmap canvas texture.
-   */
-  public preUpdate(): void {
-    if (!this.dirty) {
-      return;
-    }
-
-    if (this.dirty === true) {
-      // draw all
-      this.rotRectDisplay.clear();
-
-      // redraw cached data
-      this.data.each((parent: Glyphmap, key: string, value: DisplayData) => this.draw(value, false));
-    } else {
-      // draw only dirty
-      for (const key in this.dirty) {
-        this.draw(this.data.get(key), true);
-      }
-    }
-
-    this.dirty = false;
-
-    if (this.scene.sys.renderer.type === Phaser.WEBGL) {
-      this.canvasTexture.refresh();
-    }
   }
 
   /**
