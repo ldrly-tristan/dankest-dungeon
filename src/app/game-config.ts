@@ -1,4 +1,5 @@
-import { BootScene } from './scenes/boot-scene';
+import { globalPlugins } from './plugins';
+import { scenes } from './scenes';
 
 /**
  * Game configuration.
@@ -7,11 +8,14 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   title: 'Dankest Dungeon',
   version: '0.1.0-alpha',
   type: Phaser.AUTO,
+  plugins: {
+    global: globalPlugins
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1600,
-    height: 900
+    width: 800,
+    height: 450
   },
-  scene: [BootScene]
+  scene: scenes
 };

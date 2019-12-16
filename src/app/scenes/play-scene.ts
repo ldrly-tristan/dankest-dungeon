@@ -1,14 +1,14 @@
 import { SceneKey } from '../models/scene-key.enum';
 
 /**
- * Boot scene.
+ * Play scene.
  */
-export class BootScene extends Phaser.Scene {
+export class PlayScene extends Phaser.Scene {
   /**
-   * Instantiate boot scene.
+   * Instantiate play scene.
    */
   public constructor() {
-    super({ key: SceneKey.Boot });
+    super({ key: SceneKey.Play });
   }
 
   /**
