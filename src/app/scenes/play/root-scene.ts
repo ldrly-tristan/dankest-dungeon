@@ -26,13 +26,6 @@ export class RootScene extends Phaser.Scene {
   }
 
   /**
-   * Lifecycle method called before all others.
-   */
-  public init(): void {
-    this.initFsm().initStores();
-  }
-
-  /**
    * Lifecycle method called after init & preload.
    */
   public create(): void {
@@ -43,6 +36,13 @@ export class RootScene extends Phaser.Scene {
     }
 
     fsm.go(RootSceneState.Start);
+  }
+
+  /**
+   * Lifecycle method called before all others.
+   */
+  public init(): void {
+    this.initFsm().initStores();
   }
 
   /**

@@ -12,13 +12,6 @@ export class LoadScene extends Phaser.Scene {
   }
 
   /**
-   * Lifecycle method called after init & before create.
-   */
-  public preload(): void {
-    this.load.pack('assets-manifest', 'assets/manifest.json');
-  }
-
-  /**
    * Lifecycle method called after init & preload.
    */
   public create(): void {
@@ -41,5 +34,12 @@ export class LoadScene extends Phaser.Scene {
         }
       }
     });
+  }
+
+  /**
+   * Lifecycle method called after init & before create.
+   */
+  public preload(): void {
+    this.load.pack('assets-manifest', 'assets/manifest.json');
   }
 }

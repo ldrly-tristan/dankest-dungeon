@@ -18,16 +18,6 @@ export class TitleScene extends Phaser.Scene {
   }
 
   /**
-   * Lifecycle method called before all others.
-   */
-  public init(): void {
-    this.titleGlyphmap = this.add.existing(new TitleGlyphmap(this)) as TitleGlyphmap;
-
-    this.input.keyboard.enabled = false;
-    this.input.keyboard.once(Phaser.Input.Keyboard.Events.ANY_KEY_UP, () => this.scene.start(SceneKey.Root));
-  }
-
-  /**
    * Lifecycle method called after init & preload.
    */
   public create(): void {
@@ -44,5 +34,15 @@ export class TitleScene extends Phaser.Scene {
         onComplete: () => (this.input.keyboard.enabled = true)
       });
     });
+  }
+
+  /**
+   * Lifecycle method called before all others.
+   */
+  public init(): void {
+    this.titleGlyphmap = this.add.existing(new TitleGlyphmap(this)) as TitleGlyphmap;
+
+    this.input.keyboard.enabled = false;
+    this.input.keyboard.once(Phaser.Input.Keyboard.Events.ANY_KEY_UP, () => this.scene.start(SceneKey.Root));
   }
 }

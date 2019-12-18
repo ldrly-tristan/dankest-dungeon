@@ -6,5 +6,6 @@ export enum SceneKey {
   Load = 'Load',
   Title = 'Title',
   Root = 'Root',
-  CreatePlayer = 'CreatePlayer'
+  CreatePlayer = 'CreatePlayer',
+  CreateGame = 'CreateGame'
 }

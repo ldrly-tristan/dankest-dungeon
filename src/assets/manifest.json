@@ -3,8 +3,8 @@
     "files": [
       {
         "type": "html",
-        "key": "create-player-form",
-        "url": "assets/html/create-player-form.html"
+        "key": "create-player-name-input",
+        "url": "assets/html/create-player/name-input.html"
       }
     ]
   }

@@ -3,7 +3,7 @@ export interface Entity {
 
   name: string;
 
-  renderable: {
+  glyph: {
     ch: string;
     fg: string;
     bg?: string;
