@@ -1,3 +1,5 @@
+import RotRectDisplay from 'rot-js/lib/display/rect';
+
 import { Glyphmap } from './glyphmap';
 import { GlyphmapConfig } from './glyphmap-config';
 import { GlyphmapFactory } from './glyphmap-factory';
@@ -14,6 +16,8 @@ export class GlyphmapPlugin extends Phaser.Plugins.BasePlugin {
    */
   public constructor(pluginManager: Phaser.Plugins.PluginManager) {
     super(pluginManager);
+
+    RotRectDisplay.cache = true;
 
     pluginManager.registerGameObject('glyphmap', this.glyphmapFactory, this.glyphmapCreator);
   }

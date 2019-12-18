@@ -11,6 +11,10 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   plugins: {
     global: globalPlugins
   },
+  parent: 'body',
+  dom: {
+    createContainer: true
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

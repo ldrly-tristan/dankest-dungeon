@@ -1,0 +1,11 @@
+{
+  "core": {
+    "files": [
+      {
+        "type": "html",
+        "key": "create-player-form",
+        "url": "assets/html/create-player-form.html"
+      }
+    ]
+  }
+}

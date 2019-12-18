@@ -33,7 +33,7 @@ export class TitleGlyphmap extends Glyphmap {
     `                    .3P"%....                   `,
     `                  nP"     "*MMnx                `,
     `                                                `,
-    `                Dankest Dungeon                 `
+    `                DANKEST DUNGEON                 `
   ];
 
   /**

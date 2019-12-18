@@ -1,4 +1,4 @@
-import { SceneKey } from '../models/scene-key.enum';
+import { SceneKey } from './scene-key.enum';
 
 /**
  * Load scene.
@@ -9,6 +9,13 @@ export class LoadScene extends Phaser.Scene {
    */
   public constructor() {
     super({ key: SceneKey.Load });
+  }
+
+  /**
+   * Lifecycle method called after init & before create.
+   */
+  public preload(): void {
+    this.load.pack('assets-manifest', 'assets/manifest.json');
   }
 
   /**

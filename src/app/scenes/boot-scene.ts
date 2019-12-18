@@ -1,4 +1,4 @@
-import { SceneKey } from '../models/scene-key.enum';
+import { SceneKey } from './scene-key.enum';
 
 /**
  * Boot scene.

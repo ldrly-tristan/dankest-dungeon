@@ -23,6 +23,11 @@ export class Glyphmap extends Phaser.GameObjects.Image {
   protected canvasTexture: Phaser.Textures.CanvasTexture;
 
   /**
+   * Flag to prevent screwy behavior if destroy method is called more than once.
+   */
+  protected isDestroyed = false;
+
+  /**
    * Instantiate glyphmap.
    *
    * @param scene Phaser scene.
@@ -76,7 +81,6 @@ export class Glyphmap extends Phaser.GameObjects.Image {
     this.rotRectDisplay.setOptions(options as DisplayOptions);
 
     this.canvasTexture = scene.textures.addCanvas(this.textureKey, this.rotRectDisplay._ctx.canvas);
-
     this.setTexture(this.textureKey);
 
     this.setDataEnabled();
@@ -108,12 +112,17 @@ export class Glyphmap extends Phaser.GameObjects.Image {
    * @param fromScene Is this Game Object being destroyed as the result of a Scene shutdown? Default false.
    */
   public destroy(fromScene?: boolean): void {
-    super.destroy(fromScene);
+    if (!this.isDestroyed) {
+      super.destroy(fromScene);
 
-    this.canvasTexture.destroy();
+      this.canvasTexture.destroy();
+      delete this.canvasTexture;
 
-    delete this.canvasTexture;
-    delete this.rotRectDisplay;
+      delete this.rotRectDisplay['_canvasCache'];
+      delete this.rotRectDisplay;
+
+      this.isDestroyed = true;
+    }
   }
 
   /**

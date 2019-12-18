@@ -1,9 +1,9 @@
 import { BootScene } from './boot-scene';
 import { LoadScene } from './load-scene';
-import { RootScene } from './play/root-scene';
+import { CreatePlayerScene, RootScene } from './play';
 import { TitleScene } from './title-scene';
 
 /**
  * Game scenes.
  */
-export const scenes = [BootScene, LoadScene, TitleScene, RootScene];
+export const scenes = [BootScene, LoadScene, TitleScene, RootScene, CreatePlayerScene];
