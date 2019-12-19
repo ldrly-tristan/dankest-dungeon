@@ -1,0 +1,18 @@
+[
+  {
+    "id": "floor",
+    "name": "Floor",
+    "glyph": {
+      "ch": "·",
+      "fg": "#fff"
+    }
+  },
+  {
+    "id": "wall",
+    "name": "Wall",
+    "glyph": {
+      "ch": "#",
+      "fg": "#fff"
+    }
+  }
+]

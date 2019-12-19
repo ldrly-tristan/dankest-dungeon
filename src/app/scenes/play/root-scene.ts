@@ -92,7 +92,7 @@ export class RootScene extends Phaser.Scene {
    * Load root scene state handler.
    */
   protected onLoad(): void {
-    console.log(RootSceneState.Load);
+    this.scene.launch(SceneKey.LoadGame);
   }
 
   /**

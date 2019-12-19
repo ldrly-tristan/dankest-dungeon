@@ -28,10 +28,10 @@ export class CreateGameScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreatePlayer);
+    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
 
     if (!fsm) {
-      throw new Error('Create player scene finite state machine not found');
+      throw new Error('Create game scene finite state machine not found');
     }
 
     fsm.go(CreateGameSceneState.Start);
@@ -48,16 +48,34 @@ export class CreateGameScene extends Phaser.Scene {
    * Initialize finite state machine.
    */
   protected initFsm(): this {
-    const fsm = this.fsm.create(SceneKey.CreatePlayer, CreateGameSceneState.Init);
+    const fsm = this.fsm.create(SceneKey.CreateGame, CreateGameSceneState.Init);
 
     fsm.from(CreateGameSceneState.Init).to(CreateGameSceneState.Start);
+    fsm.from(CreateGameSceneState.Start).to(CreateGameSceneState.GenerateLevel);
 
     fsm.on(CreateGameSceneState.Start, () => this.onStart());
+    fsm.on(CreateGameSceneState.GenerateLevel, () => this.onGenerateLevel());
 
     return this;
   }
 
+  /**
+   * Generate level create game scene state handler.
+   */
+  protected onGenerateLevel(): void {
+    console.log(CreateGameSceneState.GenerateLevel);
+  }
+
+  /**
+   * Start create game scene state handler.
+   */
   protected onStart(): void {
-    console.log(CreateGameSceneState.Start);
+    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
+
+    if (!fsm) {
+      throw new Error('Create game scene finite state machine not found');
+    }
+
+    fsm.go(CreateGameSceneState.GenerateLevel);
   }
 }

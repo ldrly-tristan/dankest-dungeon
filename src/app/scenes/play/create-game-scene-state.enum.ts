@@ -3,5 +3,6 @@
  */
 export enum CreateGameSceneState {
   Init = 'Init',
-  Start = 'Start'
+  Start = 'Start',
+  GenerateLevel = 'GenerateLevel'
 }

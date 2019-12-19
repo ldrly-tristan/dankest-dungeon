@@ -2,5 +2,6 @@
  * Store key enumeration.
  */
 export enum StoreKey {
-  Player = 'player'
+  Player = 'player',
+  Level = 'level'
 }

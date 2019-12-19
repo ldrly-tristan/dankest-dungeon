@@ -14,7 +14,7 @@ export class PlayerStore extends Store<Player> {
   public static createInitialState(): Player {
     return {
       name: '',
-      staticId: undefined,
+      staticId: 'player',
       position: {
         x: 0,
         y: 0
