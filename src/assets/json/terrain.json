@@ -5,7 +5,9 @@
     "glyph": {
       "ch": "·",
       "fg": "#fff"
-    }
+    },
+    "blockMove": false,
+    "blockLight": false
   },
   {
     "id": "wall",
@@ -13,6 +15,8 @@
     "glyph": {
       "ch": "#",
       "fg": "#fff"
-    }
+    },
+    "blockMove": true,
+    "blockLight": true
   }
 ]
