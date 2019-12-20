@@ -3,5 +3,6 @@
  */
 export enum LoadGameSceneState {
   Init = 'Init',
-  Start = 'Start'
+  Start = 'Start',
+  Finish = 'Finish'
 }

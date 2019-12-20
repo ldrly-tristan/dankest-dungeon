@@ -2,6 +2,8 @@ import { Fsm } from '../../plugins/fsm';
 import { Store } from '../../plugins/store';
 import { stores, StoreKey } from '../../stores';
 import { SceneKey } from '../scene-key.enum';
+import { LevelScene } from './level-scene';
+import { RootSceneEvent } from './root-scene-event.enum';
 import { RootSceneState } from './root-scene-state.enum';
 
 /**
@@ -62,7 +64,7 @@ export class RootScene extends Phaser.Scene {
     fsm.on(RootSceneState.Start, () => this.onStart());
     fsm.on(RootSceneState.Load, () => this.onLoad());
     fsm.on(RootSceneState.Create, () => this.onCreate());
-    fsm.on(RootSceneState.Play, () => this.onPlay());
+    fsm.on(RootSceneState.Play, (from, levelScene) => this.onPlay(levelScene));
     fsm.on(RootSceneState.Over, () => this.onOver());
 
     return this;
@@ -105,8 +107,9 @@ export class RootScene extends Phaser.Scene {
   /**
    * Play root scene state handler.
    */
-  protected onPlay(): void {
-    console.log(RootSceneState.Play);
+  protected onPlay(levelScene: LevelScene): void {
+    this.scene.add(levelScene.sys.settings.key, levelScene, false);
+    this.scene.launch(levelScene.sys.settings.key);
   }
 
   /**
@@ -125,11 +128,14 @@ export class RootScene extends Phaser.Scene {
       throw new Error('Root scene finite state machine not found');
     }
 
+    this.game.events.once(RootSceneEvent.LoadFinished, levelScene => fsm.go(RootSceneState.Play, levelScene));
+
     const playerData = playerStore.getValue();
 
     if (playerData && playerData.name) {
       fsm.go(RootSceneState.Load);
     } else {
+      this.game.events.once(RootSceneEvent.CreateFinished, () => fsm.go(RootSceneState.Load));
       fsm.go(RootSceneState.Create);
     }
   }

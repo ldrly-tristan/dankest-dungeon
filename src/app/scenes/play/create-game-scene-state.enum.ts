@@ -4,5 +4,6 @@
 export enum CreateGameSceneState {
   Init = 'Init',
   Start = 'Start',
-  GenerateLevel = 'GenerateLevel'
+  GenerateLevel = 'GenerateLevel',
+  Finish = 'Finish'
 }
