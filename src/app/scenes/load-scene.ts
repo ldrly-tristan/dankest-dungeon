@@ -1,3 +1,5 @@
+import { AssetKey, AssetType, AssetUrl } from '../asset-enums';
+import { Creature, Terrain } from '../models/static';
 import { SceneKey } from './scene-key.enum';
 
 /**
@@ -15,31 +17,67 @@ export class LoadScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    // Transition to title scene.
-    this.scene.transition({
-      target: SceneKey.Title, // Scene key specifies the scene to transition to.
-      duration: 1500, // Duration of the transition, in milliseconds.
-      sleep: false, // Stop current scene (Boot) once transition is complete.
-      allowInput: false, // Disable input while transition is occuring.
-      onUpdate: (progress: number) => {
-        // Transition update callback.
-
-        const style = document.getElementById('splashContainer').style;
-
-        style.opacity = (1 - progress).toString();
-
-        if (progress === 1) {
-          style.display = 'none'; // Get out of the way.
-          style.opacity = '1'; // Reset opacity in case we need this later.
-        }
-      }
-    });
+    this.createTerrainCache()
+      .createCreaturesCache()
+      .transitionToTitleScene();
   }
 
   /**
    * Lifecycle method called after init & before create.
    */
   public preload(): void {
-    this.load.pack('assets-manifest', 'assets/manifest.json');
+    this.load.pack(AssetKey.Manifest, AssetUrl.Manifest);
+  }
+
+  /**
+   * Create creatures cache.
+   */
+  protected createCreaturesCache(): this {
+    const creaturesCache = this.cache[AssetType.Creatures] as Phaser.Cache.BaseCache;
+    const creatures = creaturesCache.get(AssetKey.Creatures) as Creature[];
+
+    const staticCreaturesIndex = {};
+    creatures.forEach(c => (staticCreaturesIndex[c.id] = c));
+
+    creaturesCache.add(AssetKey.Creatures, staticCreaturesIndex);
+
+    return this;
+  }
+
+  /**
+   * Create terrain cache.
+   */
+  protected createTerrainCache(): this {
+    const terrainCache = this.cache[AssetType.Terrain] as Phaser.Cache.BaseCache;
+    const terrain = terrainCache.get(AssetKey.Terrain) as Terrain[];
+
+    const staticTerrainIndex = {};
+    terrain.forEach(t => (staticTerrainIndex[t.id] = t));
+
+    terrainCache.add(AssetKey.Terrain, staticTerrainIndex);
+
+    return this;
+  }
+
+  /**
+   * Transition to title scene.
+   */
+  protected transitionToTitleScene(): void {
+    this.scene.transition({
+      target: SceneKey.Title,
+      duration: 1500,
+      sleep: false,
+      allowInput: false,
+      onUpdate: (progress: number) => {
+        const style = document.getElementById('splashContainer').style;
+
+        style.opacity = (1 - progress).toString();
+
+        if (progress === 1) {
+          style.display = 'none';
+          style.opacity = '1';
+        }
+      }
+    });
   }
 }

@@ -1,6 +1,6 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { Player } from '../models/instance/player';
+import { Player } from '../models/instance';
 import { StoreKey } from './store-key.enum';
 
 /**

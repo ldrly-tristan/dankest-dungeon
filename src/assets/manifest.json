@@ -8,8 +8,8 @@
       },
       {
         "type": "json",
-        "key": "creature",
-        "url": "assets/json/creature.json"
+        "key": "creatures",
+        "url": "assets/json/creatures.json"
       },
       {
         "type": "json",

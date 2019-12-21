@@ -1,6 +1,6 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { Level } from '../models/instance/level';
+import { Level } from '../models/instance';
 import { StoreKey } from './store-key.enum';
 
 /**
@@ -15,6 +15,8 @@ export class LevelStore extends Store<Level> {
     return {
       id: '',
       seed: '',
+      width: 0,
+      height: 0,
       diffMap: {}
     };
   }

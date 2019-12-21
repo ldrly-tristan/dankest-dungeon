@@ -1,5 +1,6 @@
 import RotMap from 'rot-js/lib/map';
 import { Corridor, Room } from 'rot-js/lib/map/features';
+import RotRng from 'rot-js/lib/rng';
 
 import { Mapgen } from './mapgen';
 
@@ -7,6 +8,22 @@ import { Mapgen } from './mapgen';
  * Map generator plugin.
  */
 export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements Mapgen {
+  /**
+   * Convert string seed to number seed.
+   *
+   * @param seed Seed to convert.
+   */
+  protected static convertStringSeedToNumberSeed(seed: string): number {
+    const codes: number[] = [];
+    const length = seed.length;
+
+    for (let i = 0; i < length; ++i) {
+      codes.push(seed.charCodeAt(i));
+    }
+
+    return codes.reduce((previous, current) => previous + current, 0);
+  }
+
   /**
    * Instantiate map generator plugin.
    *
@@ -41,6 +58,7 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements Mapgen {
    * @param options Options.
    */
   public cellular(
+    seed: string,
     width: number,
     height: number,
     options: {
@@ -51,6 +69,8 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements Mapgen {
       probability?: number;
     } = {}
   ): Map<string, number> {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
     const { born, connected, survive } = options;
     let { generations, probability } = options;
 
@@ -86,11 +106,13 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements Mapgen {
   /**
    * Generate digger dungeon map.
    *
+   * @param seed RNG seed.
    * @param width Width in cells.
    * @param height Height in cells.
    * @param options Options.
    */
   public digger(
+    seed: string,
     width: number,
     height: number,
     options: {
@@ -101,6 +123,8 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements Mapgen {
       timeLimit?: number;
     } = {}
   ): { map: Map<string, number>; features: { rooms: Room[]; corridor: Corridor[] } } {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
     const digger = new RotMap.Digger(width, height, options);
 
     const map = new Map<string, number>();

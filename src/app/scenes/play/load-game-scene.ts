@@ -1,5 +1,7 @@
+import { LevelConfig } from '../../models/instance';
 import { Fsm } from '../../plugins/fsm';
 import { Store } from '../../plugins/store';
+import { Level } from '../../services/level';
 import { SceneKey } from '../scene-key.enum';
 import { LevelScene } from './level-scene';
 import { LoadGameSceneState } from './load-game-scene-state.enum';
@@ -18,6 +20,11 @@ export class LoadGameScene extends Phaser.Scene {
    * Store plugin interface.
    */
   public readonly store: Store;
+
+  /**
+   * Level service interface.
+   */
+  public readonly level: Level;
 
   /**
    * Instantiate load game scene.
@@ -56,7 +63,7 @@ export class LoadGameScene extends Phaser.Scene {
     fsm.from(LoadGameSceneState.Start).to(LoadGameSceneState.Finish);
 
     fsm.on(LoadGameSceneState.Start, () => this.onStart());
-    fsm.on(LoadGameSceneState.Finish, () => this.onFinish());
+    fsm.on(LoadGameSceneState.Finish, (from, levelConfig) => this.onFinish(levelConfig));
 
     return this;
   }
@@ -64,8 +71,8 @@ export class LoadGameScene extends Phaser.Scene {
   /**
    * Finish load game scene state handler.
    */
-  protected onFinish(): void {
-    this.game.events.emit(RootSceneEvent.LoadFinished, new LevelScene('test'));
+  protected onFinish(levelConfig: LevelConfig): void {
+    this.game.events.emit(RootSceneEvent.LoadFinished, new LevelScene(levelConfig));
     this.scene.stop(SceneKey.LoadGame);
   }
 
@@ -79,6 +86,8 @@ export class LoadGameScene extends Phaser.Scene {
       throw new Error('Load game scene finite state machine not found');
     }
 
-    fsm.go(LoadGameSceneState.Finish);
+    const levelConfig = this.level.generate(true);
+
+    fsm.go(LoadGameSceneState.Finish, levelConfig);
   }
 }
