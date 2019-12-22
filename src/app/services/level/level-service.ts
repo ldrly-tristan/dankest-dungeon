@@ -47,7 +47,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
 
     const levelState: LevelState = { id, seed, width, height, map: {} };
 
-    const map = this.generateMap();
+    const map = this.generateMap(seed, width, height);
     const staticTerrainMap = this.generateStaticTerrainMap(map);
 
     return { ...levelState, staticTerrainMap };
@@ -69,9 +69,10 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
       throw new Error('Level store not found');
     }
 
-    const levelState: LevelState = JSON.parse(JSON.stringify(levelStore.getValue()));
+    const levelState = levelStore.getValue();
 
-    const map = this.generateMap();
+    const { seed, width, height } = levelState;
+    const map = this.generateMap(seed, width, height);
     const staticTerrainMap = this.generateStaticTerrainMap(map);
 
     return { ...levelState, staticTerrainMap };
@@ -80,14 +81,14 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   /**
    * Generate map.
    */
-  protected generateMap(): Map<string, number> {
+  protected generateMap(seed: string, width: number, height: number): Map<string, number> {
     const mapgenPlugin = this.pluginManager.get(MapgenPlugin.pluginObjectItem.key) as MapgenPlugin;
 
     if (!mapgenPlugin) {
       throw new Error('Mapgen plugin not found');
     }
 
-    return mapgenPlugin.arena('test', 10, 10);
+    return mapgenPlugin.arena(seed, width, height);
   }
 
   /**

@@ -1,5 +1,8 @@
+import { LevelState } from '../../models';
 import { FsmPlugin } from '../../plugins/fsm';
 import { StorePlugin } from '../../plugins/store';
+import { LevelService } from '../../services/level';
+import { LevelStore, StoreKey } from '../../stores';
 import { SceneKey } from '../scene-key.enum';
 import { CreateGameSceneState } from './create-game-scene-state.enum';
 import { RootSceneEvent } from './root-scene-event.enum';
@@ -17,6 +20,11 @@ export class CreateGameScene extends Phaser.Scene {
    * Store plugin interface.
    */
   public readonly store: StorePlugin;
+
+  /**
+   * Level service interface.
+   */
+  public readonly level: LevelService;
 
   /**
    * Instantiate create game scene.
@@ -79,6 +87,20 @@ export class CreateGameScene extends Phaser.Scene {
     if (!fsm) {
       throw new Error('Create game scene finite state machine not found');
     }
+
+    const levelStore = this.store.get<LevelStore>(StoreKey.Level);
+
+    if (!levelStore) {
+      throw new Error('Level store not found');
+    }
+
+    const levelSceneConfig = this.level.generateLevelSceneConfig({ id: 'test', seed: 'test', width: 10, height: 10 });
+
+    const { id, seed, width, height, map } = levelSceneConfig;
+
+    const levelState: LevelState = { id, seed, width, height, map };
+
+    levelStore.update(levelState);
 
     fsm.go(CreateGameSceneState.Finish);
   }

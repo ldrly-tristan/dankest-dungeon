@@ -1,9 +1,9 @@
 import { AssetKey, AssetType } from '../../asset-enums';
-import { StaticTerrainMap } from '../../lib/level';
 import { LevelSceneConfig, StaticTerrainDataIndex } from '../../models';
 import { FsmPlugin } from '../../plugins/fsm';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../plugins/glyphmap';
 import { StorePlugin } from '../../plugins/store';
+import { LevelStore, StoreKey } from '../../stores';
 import { LevelSceneState } from './level-scene-state.enum';
 import { RootSceneEvent } from './root-scene-event.enum';
 
@@ -32,32 +32,12 @@ export class LevelScene extends Phaser.Scene {
   protected glyphmap: Glyphmap;
 
   /**
-   * Height.
-   */
-  protected height: number;
-
-  /**
-   * Static terrain map.
-   */
-  protected staticTerrainMap: StaticTerrainMap;
-
-  /**
-   * Width.
-   */
-  protected width: number;
-
-  /**
    * Instantiate level scene.
    *
    * @param config Level scene configuration.
    */
-  public constructor(config: LevelSceneConfig) {
+  public constructor(protected readonly config: LevelSceneConfig) {
     super({ key: config.id });
-
-    this.staticTerrainMap = config.staticTerrainMap;
-
-    this.width = config.width;
-    this.height = config.height;
   }
 
   /**
@@ -99,13 +79,15 @@ export class LevelScene extends Phaser.Scene {
    * Initialize glyphmap.
    */
   protected initGlyphmap(): this {
-    this.glyphmap = this.add.glyphmap(0, 0, this.width, this.height);
+    const { width, height } = this.config;
+
+    this.glyphmap = this.add.glyphmap(0, 0, width, height);
 
     const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as StaticTerrainDataIndex;
 
-    for (let x = 0; x < this.width; ++x) {
-      for (let y = 0; y < this.height; ++y) {
-        const staticTerrainId = this.staticTerrainMap.get(x, y);
+    for (let x = 0; x < width; ++x) {
+      for (let y = 0; y < height; ++y) {
+        const staticTerrainId = this.config.staticTerrainMap.get(x, y);
 
         if (staticTerrainId) {
           const { ch, fg, bg } = staticTerrainIndex[staticTerrainId].glyph;
@@ -135,8 +117,16 @@ export class LevelScene extends Phaser.Scene {
       throw new Error('Level scene finite state machine not found');
     }
 
-    const { centerX, centerY } = this.cameras.main;
+    const levelStore = this.store.get<LevelStore>(StoreKey.Level);
 
+    if (!levelStore) {
+      throw new Error('Level store not found');
+    }
+
+    const { id, seed, width, height, map } = this.config;
+    levelStore.update({ id, seed, width, height, map });
+
+    const { centerX, centerY } = this.cameras.main;
     this.glyphmap.setPosition(centerX, centerY);
 
     //fsm.go(LevelSceneState.Finish);
