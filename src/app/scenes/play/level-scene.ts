@@ -2,9 +2,9 @@ import { AssetKey, AssetType } from '../../asset-enums';
 import { StaticTerrainMap } from '../../lib/level';
 import { LevelConfig } from '../../models/instance';
 import { Terrain as StaticTerrain } from '../../models/static';
-import { Fsm } from '../../plugins/fsm';
+import { FsmPlugin } from '../../plugins/fsm';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../plugins/glyphmap';
-import { Store } from '../../plugins/store';
+import { StorePlugin } from '../../plugins/store';
 import { LevelSceneState } from './level-scene-state.enum';
 import { RootSceneEvent } from './root-scene-event.enum';
 
@@ -20,12 +20,12 @@ export class LevelScene extends Phaser.Scene {
   /**
    * Finite state machine plugin interface.
    */
-  public readonly fsm: Fsm;
+  public readonly fsm: FsmPlugin;
 
   /**
    * Store plugin interface.
    */
-  public readonly store: Store;
+  public readonly store: StorePlugin;
 
   /**
    * Glyphmap.

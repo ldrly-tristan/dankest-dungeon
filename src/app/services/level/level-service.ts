@@ -5,12 +5,23 @@ import { Terrain as StaticTerrain } from '../../models/static';
 import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
 import { StoreKey, LevelStore } from '../../stores';
-import { Level } from './level';
+
+/**
+ * Level service interface.
+ */
+export interface LevelService {
+  /**
+   * Generate level.
+   *
+   * @param fromStore Generate level from store data.
+   */
+  generate(fromStore?: boolean): LevelConfig;
+}
 
 /**
  * Level service.
  */
-export class LevelService extends Phaser.Plugins.BasePlugin implements Level {
+export class LevelService extends Phaser.Plugins.BasePlugin implements LevelService {
   /**
    * Plugin object item.
    */
@@ -36,7 +47,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements Level {
    * @param fromStore Generate level from store data.
    */
   public generate(fromStore?: boolean): LevelConfig {
-    const storePlugin = this.pluginManager.get('StorePlugin') as StorePlugin;
+    const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
 
     const levelStore = storePlugin.get<LevelStore>(StoreKey.Level);
 
@@ -60,7 +71,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements Level {
       levelState.height = 10;
     }
 
-    const mapgenPlugin = this.pluginManager.get('MapgenPlugin') as MapgenPlugin;
+    const mapgenPlugin = this.pluginManager.get(MapgenPlugin.pluginObjectItem.key) as MapgenPlugin;
 
     const map = mapgenPlugin.arena(levelState.width, levelState.height);
 

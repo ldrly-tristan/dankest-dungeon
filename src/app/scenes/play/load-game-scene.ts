@@ -1,7 +1,7 @@
 import { LevelConfig } from '../../models/instance';
-import { Fsm } from '../../plugins/fsm';
-import { Store } from '../../plugins/store';
-import { Level } from '../../services/level';
+import { FsmPlugin } from '../../plugins/fsm';
+import { StorePlugin } from '../../plugins/store';
+import { LevelService } from '../../services/level';
 import { SceneKey } from '../scene-key.enum';
 import { LevelScene } from './level-scene';
 import { LoadGameSceneState } from './load-game-scene-state.enum';
@@ -14,17 +14,17 @@ export class LoadGameScene extends Phaser.Scene {
   /**
    * Finite state machine plugin interface.
    */
-  public readonly fsm: Fsm;
+  public readonly fsm: FsmPlugin;
 
   /**
    * Store plugin interface.
    */
-  public readonly store: Store;
+  public readonly store: StorePlugin;
 
   /**
    * Level service interface.
    */
-  public readonly level: Level;
+  public readonly level: LevelService;
 
   /**
    * Instantiate load game scene.

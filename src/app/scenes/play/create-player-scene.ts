@@ -1,5 +1,5 @@
-import { Fsm } from '../../plugins/fsm';
-import { Store } from '../../plugins/store';
+import { FsmPlugin } from '../../plugins/fsm';
+import { StorePlugin } from '../../plugins/store';
 import { PlayerStore, StoreKey } from '../../stores';
 import { SceneKey } from '../scene-key.enum';
 import { CreatePlayerSceneState } from './create-player-scene-state.enum';
@@ -11,12 +11,12 @@ export class CreatePlayerScene extends Phaser.Scene {
   /**
    * Finite state machine plugin interface.
    */
-  public readonly fsm: Fsm;
+  public readonly fsm: FsmPlugin;
 
   /**
    * Store plugin interface.
    */
-  public readonly store: Store;
+  public readonly store: StorePlugin;
 
   /**
    * Name input.
