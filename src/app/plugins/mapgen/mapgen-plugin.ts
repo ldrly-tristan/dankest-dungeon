@@ -9,6 +9,16 @@ import { Mapgen } from './mapgen';
  */
 export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements Mapgen {
   /**
+   * Plugin object item.
+   */
+  public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
+    key: 'MapgenPlugin',
+    plugin: MapgenPlugin,
+    start: true,
+    mapping: 'mapgen'
+  };
+
+  /**
    * Convert string seed to number seed.
    *
    * @param seed Seed to convert.

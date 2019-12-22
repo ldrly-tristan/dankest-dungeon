@@ -8,6 +8,16 @@ import { Store } from './store';
  */
 export class StorePlugin extends Phaser.Plugins.BasePlugin implements Store {
   /**
+   * Plugin object item.
+   */
+  public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
+    key: 'StorePlugin',
+    plugin: StorePlugin,
+    start: true,
+    mapping: 'store'
+  };
+
+  /**
    * Store cache.
    */
   protected cache = new Map<string, AkitaStore>();

@@ -12,6 +12,16 @@ import { Level } from './level';
  */
 export class LevelService extends Phaser.Plugins.BasePlugin implements Level {
   /**
+   * Plugin object item.
+   */
+  public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
+    key: 'LevelService',
+    plugin: LevelService,
+    start: true,
+    mapping: 'level'
+  };
+
+  /**
    * Instantiate level service.
    *
    * @param pluginManager Phaser plugin manager.

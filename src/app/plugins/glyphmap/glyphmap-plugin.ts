@@ -10,6 +10,15 @@ import { GlyphmapCreator } from './glyphmap-creator';
  */
 export class GlyphmapPlugin extends Phaser.Plugins.BasePlugin {
   /**
+   * Plugin object item.
+   */
+  public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
+    key: 'GlyphmapPlugin',
+    plugin: GlyphmapPlugin,
+    start: true
+  };
+
+  /**
    * Instantiate glyphmap plugin.
    *
    * @param pluginManager Phaser plugin manager.

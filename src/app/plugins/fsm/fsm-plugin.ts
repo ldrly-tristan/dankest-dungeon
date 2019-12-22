@@ -8,6 +8,16 @@ import { Fsm } from './fsm';
  */
 export class FsmPlugin extends Phaser.Plugins.BasePlugin implements Fsm {
   /**
+   * Plugin object item.
+   */
+  public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
+    key: 'FsmPlugin',
+    plugin: FsmPlugin,
+    start: true,
+    mapping: 'fsm'
+  };
+
+  /**
    * Finite state machine cache.
    */
   protected cache = new Map<string, TypeState.FiniteStateMachine<any>>();

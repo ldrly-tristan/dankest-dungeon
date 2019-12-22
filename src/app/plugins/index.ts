@@ -7,8 +7,8 @@ import { StorePlugin } from './store';
  * Global plugins.
  */
 export const globalPlugins = [
-  { key: 'FsmPlugin', plugin: FsmPlugin, start: true, mapping: 'fsm' },
-  { key: 'GlyphmapPlugin', plugin: GlyphmapPlugin, start: true },
-  { key: 'MapgenPlugin', plugin: MapgenPlugin, start: true, mapping: 'mapgen' },
-  { key: 'StorePlugin', plugin: StorePlugin, start: true, mapping: 'store' }
+  FsmPlugin.pluginObjectItem,
+  GlyphmapPlugin.pluginObjectItem,
+  MapgenPlugin.pluginObjectItem,
+  StorePlugin.pluginObjectItem
 ];
