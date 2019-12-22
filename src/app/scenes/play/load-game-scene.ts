@@ -63,7 +63,7 @@ export class LoadGameScene extends Phaser.Scene {
     fsm.from(LoadGameSceneState.Start).to(LoadGameSceneState.Finish);
 
     fsm.on(LoadGameSceneState.Start, () => this.onStart());
-    fsm.on(LoadGameSceneState.Finish, (from, levelConfig) => this.onFinish(levelConfig));
+    fsm.on(LoadGameSceneState.Finish, (from, config: LevelSceneConfig) => this.onFinish(config));
 
     return this;
   }
@@ -88,8 +88,6 @@ export class LoadGameScene extends Phaser.Scene {
       throw new Error('Load game scene finite state machine not found');
     }
 
-    const levelConfig = this.level.generate(true);
-
-    fsm.go(LoadGameSceneState.Finish, levelConfig);
+    fsm.go(LoadGameSceneState.Finish, this.level.generateLevelSceneConfig());
   }
 }

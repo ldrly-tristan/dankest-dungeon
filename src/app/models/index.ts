@@ -1,6 +1,7 @@
 export { GlyphData } from './glyph-data';
 export { LevelData } from './level-data';
 export { LevelSceneConfig } from './level-scene-config';
+export { LevelSceneConfigGeneratorConfig } from './level-scene-config-generator-config';
 export { LevelState } from './level-state';
 export { MapCellData } from './map-cell-data';
 export { MapData } from './map-data';

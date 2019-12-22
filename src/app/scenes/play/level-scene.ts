@@ -55,6 +55,7 @@ export class LevelScene extends Phaser.Scene {
     super({ key: config.id });
 
     this.staticTerrainMap = config.staticTerrainMap;
+
     this.width = config.width;
     this.height = config.height;
   }

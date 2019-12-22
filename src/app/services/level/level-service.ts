@@ -1,26 +1,14 @@
 import { AssetKey, AssetType } from '../../asset-enums';
-import { StaticTerrainMap } from '../../lib/level';
-import { LevelSceneConfig, LevelState, StaticTerrainDataIndex } from '../../models';
+import { MapCellPosition, StaticTerrainMap } from '../../lib/level';
+import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState, StaticTerrainDataIndex } from '../../models';
 import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
 import { StoreKey, LevelStore } from '../../stores';
 
 /**
- * Level service interface.
- */
-export interface LevelService {
-  /**
-   * Generate level.
-   *
-   * @param fromStore Generate level from store data.
-   */
-  generate(fromStore?: boolean): LevelSceneConfig;
-}
-
-/**
  * Level service.
  */
-export class LevelService extends Phaser.Plugins.BasePlugin implements LevelService {
+export class LevelService extends Phaser.Plugins.BasePlugin {
   /**
    * Plugin object item.
    */
@@ -41,12 +29,39 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements LevelServ
   }
 
   /**
-   * Generate level.
+   * Generate level scene config.
    *
-   * @param fromStore Generate level from store data.
+   * @param config Level scene configuration generator configuration.
    */
-  public generate(fromStore?: boolean): LevelSceneConfig {
+  public generateLevelSceneConfig(config?: LevelSceneConfigGeneratorConfig): LevelSceneConfig {
+    return config ? this.generateLevelSceneConfigFromConfig(config) : this.generateLevelSceneConfigFromStore();
+  }
+
+  /**
+   * Generate level scene configuration from configuration.
+   *
+   * @param config Level scene configuration generator configration.
+   */
+  protected generateLevelSceneConfigFromConfig(config: LevelSceneConfigGeneratorConfig): LevelSceneConfig {
+    const { id, seed, width, height } = config;
+
+    const levelState: LevelState = { id, seed, width, height, map: {} };
+
+    const map = this.generateMap();
+    const staticTerrainMap = this.generateStaticTerrainMap(map);
+
+    return { ...levelState, staticTerrainMap };
+  }
+
+  /**
+   * Generate level scene configuration from store.
+   */
+  protected generateLevelSceneConfigFromStore(): LevelSceneConfig {
     const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
+
+    if (!storePlugin) {
+      throw new Error('Store plugin not found');
+    }
 
     const levelStore = storePlugin.get<LevelStore>(StoreKey.Level);
 
@@ -54,35 +69,42 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements LevelServ
       throw new Error('Level store not found');
     }
 
-    let levelState: LevelState;
+    const levelState: LevelState = JSON.parse(JSON.stringify(levelStore.getValue()));
 
-    if (fromStore) {
-      levelState = JSON.parse(JSON.stringify(levelStore.getValue()));
-    }
+    const map = this.generateMap();
+    const staticTerrainMap = this.generateStaticTerrainMap(map);
 
-    if (!fromStore || !levelState.id) {
-      levelState = LevelStore.createInitialState();
+    return { ...levelState, staticTerrainMap };
+  }
 
-      levelState.id = Phaser.Math.RND.uuid();
-      levelState.seed = Phaser.Math.RND.integer().toString();
-
-      levelState.width = 10;
-      levelState.height = 10;
-    }
-
+  /**
+   * Generate map.
+   */
+  protected generateMap(): Map<string, number> {
     const mapgenPlugin = this.pluginManager.get(MapgenPlugin.pluginObjectItem.key) as MapgenPlugin;
 
-    const map = mapgenPlugin.arena(levelState.width, levelState.height);
+    if (!mapgenPlugin) {
+      throw new Error('Mapgen plugin not found');
+    }
 
+    return mapgenPlugin.arena('test', 10, 10);
+  }
+
+  /**
+   * Generate static terrain map.
+   *
+   * @param map Map.
+   */
+  protected generateStaticTerrainMap(map: Map<string, number>): StaticTerrainMap {
     const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as StaticTerrainDataIndex;
 
     const staticTerrainMap = new StaticTerrainMap();
 
     map.forEach((value, position) => {
-      const [x, y] = position.split(',').map(v => parseInt(v));
+      const { x, y } = new MapCellPosition(position);
       staticTerrainMap.set(x, y, value ? staticTerrainIndex.wall.id : staticTerrainIndex.floor.id);
     });
 
-    return { ...levelState, staticTerrainMap };
+    return staticTerrainMap;
   }
 }

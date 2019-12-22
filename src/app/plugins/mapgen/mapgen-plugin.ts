@@ -1,60 +1,17 @@
 import RotMap from 'rot-js/lib/map';
-import { Corridor, Room } from 'rot-js/lib/map/features';
 import RotRng from 'rot-js/lib/rng';
 
-/**
- * Map generator plugin interface.
- */
-export interface MapgenPlugin {
-  /**
-   * Generate arena map.
-   *
-   * @param width Width in cells.
-   * @param height Height in cells.
-   */
-  arena(width?: number, height?: number): Map<string, number>;
-
-  /**
-   * Generate cellular map.
-   *
-   * @param seed RNG seed.
-   * @param width Width in cells.
-   * @param height Height in cells.
-   * @param options Options.
-   */
-  cellular(
-    seed: string,
-    width: number,
-    height: number,
-    options: { born?: number[]; survive?: number[]; connected?: number; generations?: number; probability?: number }
-  ): Map<string, number>;
-
-  /**
-   * Generate digger dungeon map.
-   *
-   * @param seed RNG seed.
-   * @param width Width in cells.
-   * @param height Height in cells.
-   * @param options Options.
-   */
-  digger(
-    seed: string,
-    width: number,
-    height: number,
-    options: {
-      roomWidth?: [number, number];
-      roomHeight?: [number, number];
-      corridorLength?: [number, number];
-      dugPercentage?: number;
-      timeLimit?: number;
-    }
-  ): { map: Map<string, number>; features: { rooms: Room[]; corridor: Corridor[] } };
-}
+import { CellularMapgenOptions } from './cellular-mapgen-options';
+import { DiggerDungeonMapgenOptions } from './digger-dungeon-mapgen-options';
+import { GeneratedDungeonMap } from './generated-dungeon-map';
+import { IceyMazeMapgenOptions } from './icey-maze-mapgen-options';
+import { RogueMapgenOptions } from './rogue-mapgen-options';
+import { UniformDungeonMapgenOptions } from './uniform-dungeon-mapgen-options';
 
 /**
  * Map generator plugin.
  */
-export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements MapgenPlugin {
+export class MapgenPlugin extends Phaser.Plugins.BasePlugin {
   /**
    * Plugin object item.
    */
@@ -93,15 +50,18 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements MapgenPlu
   /**
    * Generate arena map.
    *
+   * @param seed Seed.
    * @param width Width in cells.
    * @param height Height in cells.
    */
-  public arena(width?: number, height?: number): Map<string, number> {
+  public arena(seed: string, width?: number, height?: number): Map<string, number> {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
     const arena = new RotMap.Arena(width, height);
     const map = new Map<string, number>();
 
     arena.create((x, y, contents) => {
-      map.set(x + ',' + y, contents);
+      map.set(`${x},${y}`, contents);
     });
 
     return map;
@@ -118,13 +78,7 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements MapgenPlu
     seed: string,
     width: number,
     height: number,
-    options: {
-      born?: number[];
-      survive?: number[];
-      connected?: number;
-      generations?: number;
-      probability?: number;
-    } = {}
+    options: CellularMapgenOptions = {}
   ): Map<string, number> {
     RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
 
@@ -146,7 +100,7 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements MapgenPlu
     const map = new Map<string, number>();
 
     function createCallback(x, y, contents): void {
-      map.set(x + ',' + y, contents);
+      map.set(`${x},${y}`, contents);
     }
 
     for (let i = generations - 1; i >= 0; --i) {
@@ -168,32 +122,145 @@ export class MapgenPlugin extends Phaser.Plugins.BasePlugin implements MapgenPlu
    * @param height Height in cells.
    * @param options Options.
    */
-  public digger(
+  public diggerDungeon(
     seed: string,
     width: number,
     height: number,
-    options: {
-      roomWidth?: [number, number];
-      roomHeight?: [number, number];
-      corridorLength?: [number, number];
-      dugPercentage?: number;
-      timeLimit?: number;
-    } = {}
-  ): { map: Map<string, number>; features: { rooms: Room[]; corridor: Corridor[] } } {
+    options: DiggerDungeonMapgenOptions = {}
+  ): GeneratedDungeonMap {
     RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
 
-    const digger = new RotMap.Digger(width, height, options);
+    const diggerDungeon = new RotMap.Digger(width, height, options);
 
     const map = new Map<string, number>();
 
-    digger.create((x, y, contents) => {
-      map.set(x + ',' + y, contents);
+    diggerDungeon.create((x, y, contents) => {
+      map.set(`${x},${y}`, contents);
     });
 
     return {
       features: {
-        corridor: digger.getCorridors(),
-        rooms: digger.getRooms()
+        corridor: diggerDungeon.getCorridors(),
+        rooms: diggerDungeon.getRooms()
+      },
+      map
+    };
+  }
+
+  /**
+   * Generate divided maze map.
+   *
+   * @param seed Seed.
+   * @param width Width in cells.
+   * @param height Height in cells.
+   */
+  public dividedMaze(seed: string, width?: number, height?: number): Map<string, number> {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
+    const dividedMaze = new RotMap.DividedMaze(width, height);
+
+    const map = new Map<string, number>();
+
+    dividedMaze.create((x, y, contents) => {
+      map.set(`${x},${y}`, contents);
+    });
+
+    return map;
+  }
+
+  /**
+   * Generate Eller maze map.
+   *
+   * @param seed Seed.
+   * @param width Width in cells.
+   * @param height Height in cells.
+   */
+  public ellerMaze(seed: string, width?: number, height?: number): Map<string, number> {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
+    const ellerMaze = new RotMap.EllerMaze(width, height);
+
+    const map = new Map<string, number>();
+
+    ellerMaze.create((x, y, contents) => {
+      map.set(`${x},${y}`, contents);
+    });
+
+    return map;
+  }
+
+  /**
+   * Generate Icey maze map.
+   *
+   * @param seed Seed.
+   * @param width Width in cells.
+   * @param height Height in cells.
+   * @param options Options.
+   */
+  public iceyMaze(seed: string, width: number, height: number, options: IceyMazeMapgenOptions): Map<string, number> {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
+    const iceyMaze = new RotMap.IceyMaze(width, height, options.regularity);
+
+    const map = new Map<string, number>();
+
+    iceyMaze.create((x, y, contents) => {
+      map.set(`${x},${y}`, contents);
+    });
+
+    return map;
+  }
+
+  /**
+   * Generate rogue map.
+   *
+   * @param seed Seed.
+   * @param width Width in cells.
+   * @param height Height in cells.
+   * @param options Options.
+   */
+  public generateRogue(seed: string, width: number, height: number, options: RogueMapgenOptions): Map<string, number> {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
+    const rogue = new RotMap.Rogue(width, height, options);
+
+    const map = new Map<string, number>();
+
+    rogue.create((x, y, contents) => {
+      map.set(`${x},${y}`, contents);
+    });
+
+    return map;
+  }
+
+  /**
+   * Generate uniform dungeon map.
+   *
+   * @param seed Seed.
+   * @param width Width in cells.
+   * @param height Height in cells.
+   * @param options Options.
+   */
+  public generateUniformDungeon(
+    seed: string,
+    width: number,
+    height: number,
+    options: UniformDungeonMapgenOptions
+  ): GeneratedDungeonMap {
+    RotRng.setSeed(MapgenPlugin.convertStringSeedToNumberSeed(seed));
+
+    const uniformDungeon = new RotMap.Uniform(width, height, options);
+
+    const map = new Map<string, number>();
+
+    uniformDungeon.create((x, y, contents) => {
+      map.set(`${x},${y}`, contents);
+    });
+
+    return {
+      features: {
+        corridor: uniformDungeon.getCorridors(),
+        rooms: uniformDungeon.getRooms()
       },
       map
     };
