@@ -1,5 +1,10 @@
 import { AssetKey, AssetType, AssetUrl } from '../asset-enums';
-import { Creature, Terrain } from '../models/static';
+import {
+  StaticCreatureDataCollection,
+  StaticCreatureDataIndex,
+  StaticTerrainDataCollection,
+  StaticTerrainDataIndex
+} from '../models';
 import { SceneKey } from './scene-key.enum';
 
 /**
@@ -34,9 +39,9 @@ export class LoadScene extends Phaser.Scene {
    */
   protected createCreaturesCache(): this {
     const creaturesCache = this.cache[AssetType.Creatures] as Phaser.Cache.BaseCache;
-    const creatures = creaturesCache.get(AssetKey.Creatures) as Creature[];
+    const creatures = creaturesCache.get(AssetKey.Creatures) as StaticCreatureDataCollection;
 
-    const staticCreaturesIndex = {};
+    const staticCreaturesIndex: StaticCreatureDataIndex = {};
     creatures.forEach(c => (staticCreaturesIndex[c.id] = c));
 
     creaturesCache.add(AssetKey.Creatures, staticCreaturesIndex);
@@ -49,9 +54,9 @@ export class LoadScene extends Phaser.Scene {
    */
   protected createTerrainCache(): this {
     const terrainCache = this.cache[AssetType.Terrain] as Phaser.Cache.BaseCache;
-    const terrain = terrainCache.get(AssetKey.Terrain) as Terrain[];
+    const terrain = terrainCache.get(AssetKey.Terrain) as StaticTerrainDataCollection;
 
-    const staticTerrainIndex = {};
+    const staticTerrainIndex: StaticTerrainDataIndex = {};
     terrain.forEach(t => (staticTerrainIndex[t.id] = t));
 
     terrainCache.add(AssetKey.Terrain, staticTerrainIndex);

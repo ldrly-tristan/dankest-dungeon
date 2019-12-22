@@ -1,6 +1,6 @@
 import { AssetKey, AssetType } from '../../asset-enums';
 import { StaticTerrainMap } from '../../lib/level';
-import { LevelSceneConfig, LevelState, StaticTerrainData } from '../../models';
+import { LevelSceneConfig, LevelState, StaticTerrainDataIndex } from '../../models';
 import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
 import { StoreKey, LevelStore } from '../../stores';
@@ -74,10 +74,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements LevelServ
 
     const map = mapgenPlugin.arena(levelState.width, levelState.height);
 
-    const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as Record<
-      string,
-      StaticTerrainData
-    >;
+    const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as StaticTerrainDataIndex;
 
     const staticTerrainMap = new StaticTerrainMap();
 
