@@ -1,7 +1,6 @@
 import { AssetKey, AssetType } from '../../asset-enums';
 import { StaticTerrainMap } from '../../lib/level';
-import { Level as LevelState, LevelConfig } from '../../models/instance';
-import { Terrain as StaticTerrain } from '../../models/static';
+import { LevelSceneConfig, LevelState, StaticTerrainData } from '../../models';
 import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
 import { StoreKey, LevelStore } from '../../stores';
@@ -15,7 +14,7 @@ export interface LevelService {
    *
    * @param fromStore Generate level from store data.
    */
-  generate(fromStore?: boolean): LevelConfig;
+  generate(fromStore?: boolean): LevelSceneConfig;
 }
 
 /**
@@ -46,7 +45,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements LevelServ
    *
    * @param fromStore Generate level from store data.
    */
-  public generate(fromStore?: boolean): LevelConfig {
+  public generate(fromStore?: boolean): LevelSceneConfig {
     const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
 
     const levelStore = storePlugin.get<LevelStore>(StoreKey.Level);
@@ -77,7 +76,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin implements LevelServ
 
     const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as Record<
       string,
-      StaticTerrain
+      StaticTerrainData
     >;
 
     const staticTerrainMap = new StaticTerrainMap();

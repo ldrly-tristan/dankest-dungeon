@@ -1,23 +1,23 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { Level } from '../models/instance';
+import { LevelState } from '../models';
 import { StoreKey } from './store-key.enum';
 
 /**
  * Level store.
  */
 @StoreConfig({ name: StoreKey.Level })
-export class LevelStore extends Store<Level> {
+export class LevelStore extends Store<LevelState> {
   /**
    * Create initial state.
    */
-  public static createInitialState(): Level {
+  public static createInitialState(): LevelState {
     return {
       id: '',
       seed: '',
       width: 0,
       height: 0,
-      diffMap: {}
+      map: {}
     };
   }
 

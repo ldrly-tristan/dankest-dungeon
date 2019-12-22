@@ -1,24 +1,20 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { Player } from '../models/instance';
+import { PlayerState } from '../models';
 import { StoreKey } from './store-key.enum';
 
 /**
  * Player store.
  */
 @StoreConfig({ name: StoreKey.Player })
-export class PlayerStore extends Store<Player> {
+export class PlayerStore extends Store<PlayerState> {
   /**
    * Create initial state.
    */
-  public static createInitialState(): Player {
+  public static createInitialState(): PlayerState {
     return {
       name: '',
-      staticId: 'player',
-      position: {
-        x: 0,
-        y: 0
-      }
+      staticDataId: 'player'
     };
   }
 

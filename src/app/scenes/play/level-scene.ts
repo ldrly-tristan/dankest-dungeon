@@ -1,7 +1,6 @@
 import { AssetKey, AssetType } from '../../asset-enums';
 import { StaticTerrainMap } from '../../lib/level';
-import { LevelConfig } from '../../models/instance';
-import { Terrain as StaticTerrain } from '../../models/static';
+import { LevelSceneConfig, StaticTerrainData } from '../../models';
 import { FsmPlugin } from '../../plugins/fsm';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../plugins/glyphmap';
 import { StorePlugin } from '../../plugins/store';
@@ -49,8 +48,10 @@ export class LevelScene extends Phaser.Scene {
 
   /**
    * Instantiate level scene.
+   *
+   * @param config Level scene configuration.
    */
-  public constructor(config: LevelConfig) {
+  public constructor(config: LevelSceneConfig) {
     super({ key: config.id });
 
     this.staticTerrainMap = config.staticTerrainMap;
@@ -101,7 +102,7 @@ export class LevelScene extends Phaser.Scene {
 
     const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as Record<
       string,
-      StaticTerrain
+      StaticTerrainData
     >;
 
     for (let x = 0; x < this.width; ++x) {

@@ -1,4 +1,4 @@
-import { LevelConfig } from '../../models/instance';
+import { LevelSceneConfig } from '../../models';
 import { FsmPlugin } from '../../plugins/fsm';
 import { StorePlugin } from '../../plugins/store';
 import { LevelService } from '../../services/level';
@@ -70,9 +70,11 @@ export class LoadGameScene extends Phaser.Scene {
 
   /**
    * Finish load game scene state handler.
+   *
+   * @param config Level scene configuration.
    */
-  protected onFinish(levelConfig: LevelConfig): void {
-    this.game.events.emit(RootSceneEvent.LoadFinished, new LevelScene(levelConfig));
+  protected onFinish(config: LevelSceneConfig): void {
+    this.game.events.emit(RootSceneEvent.LoadFinished, new LevelScene(config));
     this.scene.stop(SceneKey.LoadGame);
   }
 
