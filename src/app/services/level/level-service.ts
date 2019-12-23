@@ -50,7 +50,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
     const map = this.generateMap(seed, width, height);
     const staticTerrainMap = this.generateStaticTerrainMap(map);
 
-    return { ...levelState, staticTerrainMap };
+    return { ...levelState, staticTerrainMap, creatures: [], items: [], terrain: [] };
   }
 
   /**
@@ -75,7 +75,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
     const map = this.generateMap(seed, width, height);
     const staticTerrainMap = this.generateStaticTerrainMap(map);
 
-    return { ...levelState, staticTerrainMap };
+    return { ...levelState, staticTerrainMap, creatures: [], items: [], terrain: [] };
   }
 
   /**
