@@ -3,7 +3,7 @@ import { LevelSceneConfig, StaticTerrainDataIndex } from '../../models';
 import { FsmPlugin } from '../../plugins/fsm';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../plugins/glyphmap';
 import { StorePlugin } from '../../plugins/store';
-import { LevelStore, StoreKey } from '../../stores';
+import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore, StoreKey } from '../../stores';
 import { LevelSceneState } from './level-scene-state.enum';
 import { RootSceneEvent } from './root-scene-event.enum';
 
@@ -123,8 +123,30 @@ export class LevelScene extends Phaser.Scene {
       throw new Error('Level store not found');
     }
 
-    const { id, seed, width, height, map } = this.config;
+    const levelCreaturesStore = this.store.get<LevelCreaturesStore>(StoreKey.LevelCreatures);
+
+    if (!levelCreaturesStore) {
+      throw new Error('Level creatures store not found');
+    }
+
+    const levelItemsStore = this.store.get<LevelItemsStore>(StoreKey.LevelItems);
+
+    if (!levelItemsStore) {
+      throw new Error('Level items store not found');
+    }
+
+    const levelTerrainStore = this.store.get<LevelTerrainStore>(StoreKey.LevelTerrain);
+
+    if (!levelTerrainStore) {
+      throw new Error('Level terrain store not found');
+    }
+
+    const { id, seed, width, height, map, creatures, items, terrain } = this.config;
+
     levelStore.update({ id, seed, width, height, map });
+    levelCreaturesStore.set(creatures);
+    levelItemsStore.set(items);
+    levelTerrainStore.set(terrain);
 
     const { centerX, centerY } = this.cameras.main;
     this.glyphmap.setPosition(centerX, centerY);

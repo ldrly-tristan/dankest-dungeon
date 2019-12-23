@@ -1,9 +1,9 @@
 import { AssetKey, AssetType } from '../../asset-enums';
-import { MapCellPosition, StaticTerrainMap } from '../../lib/level';
+import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../lib/level';
 import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState, StaticTerrainDataIndex } from '../../models';
 import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
-import { StoreKey, LevelStore } from '../../stores';
+import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore, StoreKey } from '../../stores';
 
 /**
  * Level service.
@@ -47,10 +47,20 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
 
     const levelState: LevelState = { id, seed, width, height, map: {} };
 
-    const map = this.generateMap(seed, width, height);
-    const staticTerrainMap = this.generateStaticTerrainMap(map);
+    const levelSceneConfig: LevelSceneConfig = {
+      ...levelState,
+      creatures: [],
+      items: [],
+      terrain: [],
+      staticTerrainMap: new StaticTerrainMap(),
+      entityPositionIndex: new EntityPositionIndex()
+    };
 
-    return { ...levelState, staticTerrainMap, creatures: [], items: [], terrain: [] };
+    const map = this.generateMap(seed, width, height);
+
+    this.populateStaticTerrainMap(levelSceneConfig, map).populateEntityPositionIndex(levelSceneConfig);
+
+    return levelSceneConfig;
   }
 
   /**
@@ -69,13 +79,44 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
       throw new Error('Level store not found');
     }
 
-    const levelState = levelStore.getValue();
+    const levelCreaturesStore = storePlugin.get<LevelCreaturesStore>(StoreKey.LevelCreatures);
 
-    const { seed, width, height } = levelState;
+    if (!levelCreaturesStore) {
+      throw new Error('Level creature store not found');
+    }
+
+    const levelItemsStore = storePlugin.get<LevelItemsStore>(StoreKey.LevelItems);
+
+    if (!levelItemsStore) {
+      throw new Error('Level items store not found');
+    }
+
+    const levelTerrainStore = storePlugin.get<LevelTerrainStore>(StoreKey.LevelTerrain);
+
+    if (!levelTerrainStore) {
+      throw new Error('Level terrain store not found');
+    }
+
+    const levelCreaturesState = levelCreaturesStore.getValue();
+    const levelItemsState = levelItemsStore.getValue();
+    const levelTerrainState = levelTerrainStore.getValue();
+
+    const levelSceneConfig: LevelSceneConfig = {
+      ...levelStore.getValue(),
+      creatures: levelCreaturesState.ids.map(id => levelCreaturesState.entities[id]),
+      items: levelItemsState.ids.map(id => levelItemsState.entities[id]),
+      terrain: levelTerrainState.ids.map(id => levelTerrainState.entities[id]),
+      staticTerrainMap: new StaticTerrainMap(),
+      entityPositionIndex: new EntityPositionIndex()
+    };
+
+    const { seed, width, height } = levelSceneConfig;
+
     const map = this.generateMap(seed, width, height);
-    const staticTerrainMap = this.generateStaticTerrainMap(map);
 
-    return { ...levelState, staticTerrainMap, creatures: [], items: [], terrain: [] };
+    this.populateStaticTerrainMap(levelSceneConfig, map).populateEntityPositionIndex(levelSceneConfig);
+
+    return levelSceneConfig;
   }
 
   /**
@@ -92,20 +133,36 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
-   * Generate static terrain map.
+   * Populate entity position index.
    *
-   * @param map Map.
+   * @param levelSceneConfig Level scene configuration.
    */
-  protected generateStaticTerrainMap(map: Map<string, number>): StaticTerrainMap {
-    const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as StaticTerrainDataIndex;
+  protected populateEntityPositionIndex(levelSceneConfig: LevelSceneConfig): this {
+    Object.keys(levelSceneConfig.map).forEach(position => {
+      const mapCellData = levelSceneConfig.map[position];
 
-    const staticTerrainMap = new StaticTerrainMap();
+      [mapCellData.creatureId, mapCellData.terrainId]
+        .concat(mapCellData.itemIds)
+        .forEach(id => levelSceneConfig.entityPositionIndex.set(id, new MapCellPosition(position)));
+    });
+
+    return this;
+  }
+
+  /**
+   * Populate static terrain map.
+   *
+   * @param levelSceneConfig Level scene configuration.
+   * @param map Source map.
+   */
+  protected populateStaticTerrainMap(levelSceneConfig: LevelSceneConfig, map: Map<string, number>): this {
+    const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as StaticTerrainDataIndex;
 
     map.forEach((value, position) => {
       const { x, y } = new MapCellPosition(position);
-      staticTerrainMap.set(x, y, value ? staticTerrainIndex.wall.id : staticTerrainIndex.floor.id);
+      levelSceneConfig.staticTerrainMap.set(x, y, value ? staticTerrainIndex.wall.id : staticTerrainIndex.floor.id);
     });
 
-    return staticTerrainMap;
+    return this;
   }
 }

@@ -1,4 +1,4 @@
-import { StaticTerrainMap } from '../lib/level';
+import { EntityPositionIndex, StaticTerrainMap } from '../lib/level';
 import { LevelData } from './level-data';
 import { CreatureDataCollection } from './creature-data-collection';
 import { ItemDataCollection } from './item-data-collection';
@@ -12,6 +12,11 @@ export interface LevelSceneConfig extends LevelData {
    * Creature instances.
    */
   creatures: CreatureDataCollection;
+
+  /**
+   * Entity position index.
+   */
+  entityPositionIndex: EntityPositionIndex;
 
   /**
    * Items instances.
