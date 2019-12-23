@@ -1,6 +1,6 @@
 [
   {
-    "id": "player",
+    "id": "Player",
     "name": "Player",
     "glyph": {
       "ch": "@",

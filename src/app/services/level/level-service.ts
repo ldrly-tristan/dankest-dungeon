@@ -1,4 +1,5 @@
 import { AssetKey, AssetType } from '../../asset-enums';
+import { StaticTerrainDataId } from '../../lib/entity';
 import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../lib/level';
 import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState, StaticTerrainDataIndex } from '../../models';
 import { MapgenPlugin } from '../../plugins/mapgen';
@@ -38,6 +39,25 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Persist level scene configuration.
+   *
+   * @param config Level scene configuration.
+   */
+  public persistLevelSceneConfig(config?: LevelSceneConfig): this {
+    const { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore } = this.getStores();
+
+    const { id, seed, width, height, map, creatures, items, terrain } = config;
+
+    levelStore.update({ id, seed, width, height, map });
+
+    levelCreaturesStore.set(creatures);
+    levelItemsStore.set(items);
+    levelTerrainStore.set(terrain);
+
+    return this;
+  }
+
+  /**
    * Generate level scene configuration from configuration.
    *
    * @param config Level scene configuration generator configration.
@@ -67,35 +87,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    * Generate level scene configuration from store.
    */
   protected generateLevelSceneConfigFromStore(): LevelSceneConfig {
-    const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
-
-    if (!storePlugin) {
-      throw new Error('Store plugin not found');
-    }
-
-    const levelStore = storePlugin.get<LevelStore>(StoreKey.Level);
-
-    if (!levelStore) {
-      throw new Error('Level store not found');
-    }
-
-    const levelCreaturesStore = storePlugin.get<LevelCreaturesStore>(StoreKey.LevelCreatures);
-
-    if (!levelCreaturesStore) {
-      throw new Error('Level creature store not found');
-    }
-
-    const levelItemsStore = storePlugin.get<LevelItemsStore>(StoreKey.LevelItems);
-
-    if (!levelItemsStore) {
-      throw new Error('Level items store not found');
-    }
-
-    const levelTerrainStore = storePlugin.get<LevelTerrainStore>(StoreKey.LevelTerrain);
-
-    if (!levelTerrainStore) {
-      throw new Error('Level terrain store not found');
-    }
+    const { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore } = this.getStores();
 
     const levelCreaturesState = levelCreaturesStore.getValue();
     const levelItemsState = levelItemsStore.getValue();
@@ -133,6 +125,48 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Get stores.
+   */
+  protected getStores(): {
+    levelStore: LevelStore;
+    levelCreaturesStore: LevelCreaturesStore;
+    levelItemsStore: LevelItemsStore;
+    levelTerrainStore: LevelTerrainStore;
+  } {
+    const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
+
+    if (!storePlugin) {
+      throw new Error('Store plugin not found');
+    }
+
+    const levelStore = storePlugin.get<LevelStore>(StoreKey.Level);
+
+    if (!levelStore) {
+      throw new Error('Level store not found');
+    }
+
+    const levelCreaturesStore = storePlugin.get<LevelCreaturesStore>(StoreKey.LevelCreatures);
+
+    if (!levelCreaturesStore) {
+      throw new Error('Level creature store not found');
+    }
+
+    const levelItemsStore = storePlugin.get<LevelItemsStore>(StoreKey.LevelItems);
+
+    if (!levelItemsStore) {
+      throw new Error('Level items store not found');
+    }
+
+    const levelTerrainStore = storePlugin.get<LevelTerrainStore>(StoreKey.LevelTerrain);
+
+    if (!levelTerrainStore) {
+      throw new Error('Level terrain store not found');
+    }
+
+    return { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore };
+  }
+
+  /**
    * Populate entity position index.
    *
    * @param levelSceneConfig Level scene configuration.
@@ -160,7 +194,11 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
 
     map.forEach((value, position) => {
       const { x, y } = new MapCellPosition(position);
-      levelSceneConfig.staticTerrainMap.set(x, y, value ? staticTerrainIndex.wall.id : staticTerrainIndex.floor.id);
+      levelSceneConfig.staticTerrainMap.set(
+        x,
+        y,
+        value ? staticTerrainIndex[StaticTerrainDataId.Wall].id : staticTerrainIndex[StaticTerrainDataId.Floor].id
+      );
     });
 
     return this;
