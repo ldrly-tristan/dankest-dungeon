@@ -1,9 +1,9 @@
-import { EntityData } from './entity-data';
+import { CreatureData } from './creature-data';
 
 /**
  * Player data.
  */
-export interface PlayerData extends EntityData {
+export interface PlayerData extends CreatureData {
   /**
    * Name.
    */

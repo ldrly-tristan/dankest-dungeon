@@ -2,6 +2,9 @@
  * Store key enumeration.
  */
 export enum StoreKey {
-  Player = 'player',
-  Level = 'level'
+  Player = 'Player',
+  Level = 'Level',
+  LevelCreatures = 'LevelCreatures',
+  LevelTerrain = 'LevelTerrain',
+  LevelItems = 'LevelItems'
 }
