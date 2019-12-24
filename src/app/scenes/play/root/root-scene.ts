@@ -1,6 +1,6 @@
 import { FsmPlugin } from '../../../plugins/fsm';
 import { StorePlugin } from '../../../plugins/store';
-import { stores, StoreKey } from '../../../stores';
+import { PlayerService } from '../../../services/player';
 import { SceneKey } from '../../scene-key.enum';
 import { LevelScene } from '../level';
 import { RootSceneEvent } from './root-scene-event.enum';
@@ -11,12 +11,17 @@ import { RootSceneState } from './root-scene-state.enum';
  */
 export class RootScene extends Phaser.Scene {
   /**
-   * Finite state machine plugin interface.
+   * Finite state machine plugin.
    */
   public readonly fsm: FsmPlugin;
 
   /**
-   * Store plugin interface.
+   * Player service.
+   */
+  public readonly player: PlayerService;
+
+  /**
+   * Store plugin.
    */
   public readonly store: StorePlugin;
 
@@ -44,7 +49,7 @@ export class RootScene extends Phaser.Scene {
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.initFsm().initStores();
+    this.initFsm();
   }
 
   /**
@@ -66,19 +71,6 @@ export class RootScene extends Phaser.Scene {
     fsm.on(RootSceneState.Create, () => this.onCreate());
     fsm.on(RootSceneState.Play, (from, levelScene) => this.onPlay(levelScene));
     fsm.on(RootSceneState.Over, () => this.onOver());
-
-    return this;
-  }
-
-  /**
-   * Initialize state stores.
-   */
-  protected initStores(): this {
-    this.store.persistState({
-      key: 'ldrly-tristan/dankest-dungeon'
-    });
-
-    this.store.register(stores.map(s => new s()));
 
     return this;
   }
@@ -116,12 +108,6 @@ export class RootScene extends Phaser.Scene {
    * Start root scene state handler.
    */
   protected onStart(): void {
-    const playerStore = this.store.get(StoreKey.Player);
-
-    if (!playerStore) {
-      throw new Error('Player store not found');
-    }
-
     const fsm = this.fsm.get<RootSceneState>(SceneKey.Root);
 
     if (!fsm) {
@@ -130,9 +116,7 @@ export class RootScene extends Phaser.Scene {
 
     this.game.events.once(RootSceneEvent.LoadFinished, levelScene => fsm.go(RootSceneState.Play, levelScene));
 
-    const playerData = playerStore.getValue();
-
-    if (playerData && playerData.name) {
+    if (this.player.getPlayerState().name) {
       fsm.go(RootSceneState.Load);
     } else {
       this.game.events.once(RootSceneEvent.CreateFinished, () => fsm.go(RootSceneState.Load));

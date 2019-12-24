@@ -1,7 +1,6 @@
 import { FsmPlugin } from '../../../plugins/fsm';
 import { StorePlugin } from '../../../plugins/store';
-import { StoreKey } from '../../../stores';
-import { PlayerStore } from '../../../stores/player';
+import { PlayerService } from '../../../services/player';
 import { SceneKey } from '../../scene-key.enum';
 import { CreatePlayerSceneState } from './create-player-scene-state.enum';
 
@@ -10,14 +9,19 @@ import { CreatePlayerSceneState } from './create-player-scene-state.enum';
  */
 export class CreatePlayerScene extends Phaser.Scene {
   /**
-   * Finite state machine plugin interface.
+   * Finite state machine plugin.
    */
   public readonly fsm: FsmPlugin;
 
   /**
-   * Store plugin interface.
+   * Store plugin.
    */
   public readonly store: StorePlugin;
+
+  /**
+   * Player service.
+   */
+  public readonly player: PlayerService;
 
   /**
    * Name input.
@@ -85,19 +89,13 @@ export class CreatePlayerScene extends Phaser.Scene {
     const name = event.target['value'].trim();
 
     if (name && (event.which === 13 || event.keyCode === 13 || event.key === 'Enter')) {
-      const playerStore = this.store.get<PlayerStore>(StoreKey.Player);
-
-      if (!playerStore) {
-        throw new Error('Player store not found');
-      }
-
-      playerStore.update({ name });
-
       const fsm = this.fsm.get<CreatePlayerSceneState>(SceneKey.CreatePlayer);
 
       if (!fsm) {
         throw new Error('Create player scene finite state machine not found');
       }
+
+      this.player.persistPlayerState({ name });
 
       fsm.go(CreatePlayerSceneState.Finish);
     }
