@@ -1,3 +1,5 @@
+import { typestate } from 'typestate';
+
 import { AssetKey, AssetType } from '../../../asset-enums';
 import { StaticTerrainDataIndex } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
@@ -49,13 +51,7 @@ export class LevelScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.fsm.get<LevelSceneState>(this.sys.settings.key);
-
-    if (!fsm) {
-      throw new Error('Level scene finite state machine not found');
-    }
-
-    fsm.go(LevelSceneState.Start);
+    this.getFsm().go(LevelSceneState.Start);
   }
 
   /**
@@ -63,6 +59,19 @@ export class LevelScene extends Phaser.Scene {
    */
   public init(): void {
     this.initFsm().initGlyphmap();
+  }
+
+  /**
+   * Get finite state machine.
+   */
+  protected getFsm(): typestate.FiniteStateMachine<LevelSceneState> {
+    const fsm = this.fsm.get<LevelSceneState>(this.sys.settings.key);
+
+    if (!fsm) {
+      throw new Error('Level scene finite state machine not found');
+    }
+
+    return fsm;
   }
 
   /**
@@ -116,17 +125,11 @@ export class LevelScene extends Phaser.Scene {
    * Start level scene state handler.
    */
   protected onStart(): void {
-    const fsm = this.fsm.get<LevelSceneState>(this.sys.settings.key);
-
-    if (!fsm) {
-      throw new Error('Level scene finite state machine not found');
-    }
-
     this.level.persistLevelSceneConfig(this.config);
 
     const { centerX, centerY } = this.cameras.main;
     this.glyphmap.setPosition(centerX, centerY);
 
-    //fsm.go(LevelSceneState.Finish);
+    //this.getFsm().go(LevelSceneState.Finish);
   }
 }

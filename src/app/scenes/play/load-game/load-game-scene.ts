@@ -1,3 +1,5 @@
+import { typestate } from 'typestate';
+
 import { LevelSceneConfig } from '../../../models/level';
 import { FsmPlugin } from '../../../plugins/fsm';
 import { StorePlugin } from '../../../plugins/store';
@@ -37,13 +39,7 @@ export class LoadGameScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.fsm.get<LoadGameSceneState>(SceneKey.LoadGame);
-
-    if (!fsm) {
-      throw new Error('Load game scene finite state machine not found');
-    }
-
-    fsm.go(LoadGameSceneState.Start);
+    this.getFsm().go(LoadGameSceneState.Start);
   }
 
   /**
@@ -51,6 +47,19 @@ export class LoadGameScene extends Phaser.Scene {
    */
   public init(): void {
     this.initFsm();
+  }
+
+  /**
+   * Get finite state machine.
+   */
+  protected getFsm(): typestate.FiniteStateMachine<LoadGameSceneState> {
+    const fsm = this.fsm.get<LoadGameSceneState>(SceneKey.LoadGame);
+
+    if (!fsm) {
+      throw new Error('Load game scene finite state machine not found');
+    }
+
+    return fsm;
   }
 
   /**
@@ -82,12 +91,6 @@ export class LoadGameScene extends Phaser.Scene {
    * Start load game scene state handler.
    */
   protected onStart(): void {
-    const fsm = this.fsm.get<LoadGameSceneState>(SceneKey.LoadGame);
-
-    if (!fsm) {
-      throw new Error('Load game scene finite state machine not found');
-    }
-
-    fsm.go(LoadGameSceneState.Finish, this.level.generateLevelSceneConfig());
+    this.getFsm().go(LoadGameSceneState.Finish, this.level.generateLevelSceneConfig());
   }
 }

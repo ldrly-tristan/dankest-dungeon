@@ -1,3 +1,5 @@
+import { typestate } from 'typestate';
+
 import { FsmPlugin } from '../../../plugins/fsm';
 import { StorePlugin } from '../../../plugins/store';
 import { LevelService } from '../../../services/level';
@@ -35,13 +37,7 @@ export class CreateGameScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
-
-    if (!fsm) {
-      throw new Error('Create game scene finite state machine not found');
-    }
-
-    fsm.go(CreateGameSceneState.Start);
+    this.getFsm().go(CreateGameSceneState.Start);
   }
 
   /**
@@ -49,6 +45,19 @@ export class CreateGameScene extends Phaser.Scene {
    */
   public init(): void {
     this.initFsm();
+  }
+
+  /**
+   * Get finite state machine.
+   */
+  protected getFsm(): typestate.FiniteStateMachine<CreateGameSceneState> {
+    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
+
+    if (!fsm) {
+      throw new Error('Create game scene finite state machine not found');
+    }
+
+    return fsm;
   }
 
   /**
@@ -80,29 +89,17 @@ export class CreateGameScene extends Phaser.Scene {
    * Generate level create game scene state handler.
    */
   protected onGenerateLevel(): void {
-    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
-
-    if (!fsm) {
-      throw new Error('Create game scene finite state machine not found');
-    }
-
     const levelSceneConfig = this.level.generateLevelSceneConfig({ id: 'test', seed: 'test', width: 10, height: 10 });
 
     this.level.persistLevelSceneConfig(levelSceneConfig);
 
-    fsm.go(CreateGameSceneState.Finish);
+    this.getFsm().go(CreateGameSceneState.Finish);
   }
 
   /**
    * Start create game scene state handler.
    */
   protected onStart(): void {
-    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
-
-    if (!fsm) {
-      throw new Error('Create game scene finite state machine not found');
-    }
-
-    fsm.go(CreateGameSceneState.GenerateLevel);
+    this.getFsm().go(CreateGameSceneState.GenerateLevel);
   }
 }

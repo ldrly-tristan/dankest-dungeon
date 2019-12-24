@@ -1,3 +1,5 @@
+import { typestate } from 'typestate';
+
 import { FsmPlugin } from '../../../plugins/fsm';
 import { StorePlugin } from '../../../plugins/store';
 import { PlayerService } from '../../../services/player';
@@ -36,13 +38,7 @@ export class RootScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.fsm.get(SceneKey.Root);
-
-    if (!fsm) {
-      throw new Error('Root scene finite state machine not found');
-    }
-
-    fsm.go(RootSceneState.Start);
+    this.getFsm().go(RootSceneState.Start);
   }
 
   /**
@@ -50,6 +46,19 @@ export class RootScene extends Phaser.Scene {
    */
   public init(): void {
     this.initFsm();
+  }
+
+  /**
+   * Get finite state machine.
+   */
+  protected getFsm(): typestate.FiniteStateMachine<RootSceneState> {
+    const fsm = this.fsm.get<RootSceneState>(SceneKey.Root);
+
+    if (!fsm) {
+      throw new Error('Root scene finite state machine not found');
+    }
+
+    return fsm;
   }
 
   /**
@@ -108,11 +117,7 @@ export class RootScene extends Phaser.Scene {
    * Start root scene state handler.
    */
   protected onStart(): void {
-    const fsm = this.fsm.get<RootSceneState>(SceneKey.Root);
-
-    if (!fsm) {
-      throw new Error('Root scene finite state machine not found');
-    }
+    const fsm = this.getFsm();
 
     this.game.events.once(RootSceneEvent.LoadFinished, levelScene => fsm.go(RootSceneState.Play, levelScene));
 

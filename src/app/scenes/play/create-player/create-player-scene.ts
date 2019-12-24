@@ -1,3 +1,5 @@
+import { typestate } from 'typestate';
+
 import { FsmPlugin } from '../../../plugins/fsm';
 import { StorePlugin } from '../../../plugins/store';
 import { PlayerService } from '../../../services/player';
@@ -39,13 +41,7 @@ export class CreatePlayerScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.fsm.get<CreatePlayerSceneState>(SceneKey.CreatePlayer);
-
-    if (!fsm) {
-      throw new Error('Create player scene finite state machine not found');
-    }
-
-    fsm.go(CreatePlayerSceneState.Start);
+    this.getFsm().go(CreatePlayerSceneState.Start);
   }
 
   /**
@@ -53,6 +49,19 @@ export class CreatePlayerScene extends Phaser.Scene {
    */
   public init(): void {
     this.initFsm();
+  }
+
+  /**
+   * Get finite state machine.
+   */
+  protected getFsm(): typestate.FiniteStateMachine<CreatePlayerSceneState> {
+    const fsm = this.fsm.get<CreatePlayerSceneState>(SceneKey.CreatePlayer);
+
+    if (!fsm) {
+      throw new Error('Create player scene finite state machine not found');
+    }
+
+    return fsm;
   }
 
   /**
@@ -89,15 +98,8 @@ export class CreatePlayerScene extends Phaser.Scene {
     const name = event.target['value'].trim();
 
     if (name && (event.which === 13 || event.keyCode === 13 || event.key === 'Enter')) {
-      const fsm = this.fsm.get<CreatePlayerSceneState>(SceneKey.CreatePlayer);
-
-      if (!fsm) {
-        throw new Error('Create player scene finite state machine not found');
-      }
-
       this.player.persistPlayerState({ name });
-
-      fsm.go(CreatePlayerSceneState.Finish);
+      this.getFsm().go(CreatePlayerSceneState.Finish);
     }
   }
 
@@ -142,12 +144,6 @@ export class CreatePlayerScene extends Phaser.Scene {
    * Start create player scene state handler.
    */
   protected onStart(): void {
-    const fsm = this.fsm.get<CreatePlayerSceneState>(SceneKey.CreatePlayer);
-
-    if (!fsm) {
-      throw new Error('Create player scene finite state machine not found');
-    }
-
-    fsm.go(CreatePlayerSceneState.Name);
+    this.getFsm().go(CreatePlayerSceneState.Name);
   }
 }
