@@ -1,10 +1,11 @@
 import { AssetKey, AssetType } from '../../asset-enums';
-import { StaticTerrainDataId } from '../../lib/entity';
 import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../lib/level';
-import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState, StaticTerrainDataIndex } from '../../models';
+import { StaticTerrainDataId, StaticTerrainDataIndex, UniqueEntityDataId } from '../../models/entity';
+import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState } from '../../models/level';
 import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
-import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore, StoreKey } from '../../stores';
+import { StoreKey } from '../../stores';
+import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../stores/level';
 
 /**
  * Level service.
@@ -78,7 +79,9 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
 
     const map = this.generateMap(seed, width, height);
 
-    this.populateStaticTerrainMap(levelSceneConfig, map).populateEntityPositionIndex(levelSceneConfig);
+    this.placePlayer(levelSceneConfig, 4, 4)
+      .populateStaticTerrainMap(levelSceneConfig, map)
+      .populateEntityPositionIndex(levelSceneConfig);
 
     return levelSceneConfig;
   }
@@ -164,6 +167,25 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
     }
 
     return { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore };
+  }
+
+  /**
+   * Place player.
+   *
+   * @param levelSceneConfig Level scene configuration
+   * @param x X-coordinate.
+   * @param y Y-coordinate.
+   */
+  protected placePlayer(levelSceneConfig: LevelSceneConfig, x: number, y: number): this {
+    const position = new MapCellPosition(x, y);
+
+    const mapCellData = levelSceneConfig.map[position.toString()] || {};
+
+    mapCellData.creatureId = UniqueEntityDataId.Player;
+
+    levelSceneConfig.map[position.toString()] = mapCellData;
+
+    return this;
   }
 
   /**

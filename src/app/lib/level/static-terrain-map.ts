@@ -1,3 +1,4 @@
+import { StaticTerrainDataId } from '../../models/entity';
 /**
  * Static terrain map.
  */
@@ -10,12 +11,12 @@ export class StaticTerrainMap {
   /**
    * Map static terrain id to static terrain index.
    */
-  protected staticTerrainIndex = new Map<string, number>();
+  protected staticTerrainIndex = new Map<StaticTerrainDataId, number>();
 
   /**
    * Map static terrain index to static terrain id.
    */
-  protected staticTerrainReverseIndex = new Map<number, string>();
+  protected staticTerrainReverseIndex = new Map<number, StaticTerrainDataId>();
 
   /**
    * Index counter.
@@ -28,7 +29,7 @@ export class StaticTerrainMap {
    * @param x X-coordinate.
    * @param y Y-coordinate.
    */
-  public get(x: number, y: number): string | void {
+  public get(x: number, y: number): StaticTerrainDataId | void {
     const position = x + ',' + y;
 
     if (!this.map.has(position)) {
@@ -45,7 +46,7 @@ export class StaticTerrainMap {
    * @param y Y-coordinate.
    * @param staticTerrainId Static terrain id.
    */
-  public set(x: number, y: number, staticTerrainId: string): this {
+  public set(x: number, y: number, staticTerrainId: StaticTerrainDataId): this {
     const position = x + ',' + y;
 
     let index = this.staticTerrainIndex.get(staticTerrainId);

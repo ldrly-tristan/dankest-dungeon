@@ -1,11 +1,9 @@
-import { BootScene } from './boot-scene';
-export { BootScene } from './boot-scene';
-import { LoadScene } from './load-scene';
-export { LoadScene } from './load-scene';
+import { BootScene } from './boot';
+import { LoadScene } from './load';
 import { CreateGameScene, CreatePlayerScene, LoadGameScene, RootScene } from './play';
-export { CreateGameScene, CreatePlayerScene, LoadGameScene, RootScene } from './play';
-import { TitleScene } from './title-scene';
-export { TitleScene } from './title-scene';
+import { TitleScene } from './title';
+
+export { SceneKey } from './scene-key.enum';
 
 /**
  * Game scenes.
