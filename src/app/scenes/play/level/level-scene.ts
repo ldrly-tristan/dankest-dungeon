@@ -1,37 +1,24 @@
-import { typestate } from 'typestate';
-
 import { AssetKey, AssetType } from '../../../asset-enums';
 import { StaticTerrainDataIndex } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
-import { FsmPlugin } from '../../../plugins/fsm';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../plugins/glyphmap';
-import { StorePlugin } from '../../../plugins/store';
 import { LevelService } from '../../../services/level';
+import { FsmScene } from '../fsm-scene';
 import { LevelSceneState } from './level-scene-state.enum';
 
 /**
  * Level scene.
  */
-export class LevelScene extends Phaser.Scene {
+export class LevelScene extends FsmScene<LevelSceneState> {
   /**
    * Glyphmap aware game object factory.
    */
   public readonly add: GlyphmapAwareGameObjectFactory;
 
   /**
-   * Finite state machine plugin interface.
-   */
-  public readonly fsm: FsmPlugin;
-
-  /**
    * Level service interface.
    */
   public readonly level: LevelService;
-
-  /**
-   * Store plugin interface.
-   */
-  public readonly store: StorePlugin;
 
   /**
    * Glyphmap.
@@ -51,39 +38,31 @@ export class LevelScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.getFsm().go(LevelSceneState.Start);
+    this.level.persistLevelSceneConfig(this.config);
+
+    const { centerX, centerY } = this.cameras.main;
+    this.glyphmap.setPosition(centerX, centerY);
+
+    //this.getFsm().go(LevelSceneState.Finish);
   }
 
   /**
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.initFsm().initGlyphmap();
+    this.createFsm(LevelSceneState.Init)
+      .loadFsm()
+      .initGlyphmap();
   }
 
   /**
-   * Get finite state machine.
+   * Load finite state machine.
    */
-  protected getFsm(): typestate.FiniteStateMachine<LevelSceneState> {
-    const fsm = this.fsm.get<LevelSceneState>(this.sys.settings.key);
-
-    if (!fsm) {
-      throw new Error('Level scene finite state machine not found');
-    }
-
-    return fsm;
-  }
-
-  /**
-   * Initialize finite state machine.
-   */
-  protected initFsm(): this {
+  protected loadFsm(): this {
     const fsm = this.fsm.create(this.sys.settings.key, LevelSceneState.Init);
 
-    fsm.from(LevelSceneState.Init).to(LevelSceneState.Start);
-    fsm.from(LevelSceneState.Start).to(LevelSceneState.Finish);
+    fsm.from(LevelSceneState.Init).to(LevelSceneState.Finish);
 
-    fsm.on(LevelSceneState.Start, () => this.onStart());
     fsm.on(LevelSceneState.Finish, () => this.onFinish());
 
     return this;
@@ -119,17 +98,5 @@ export class LevelScene extends Phaser.Scene {
    */
   protected onFinish(): void {
     this.scene.stop(this.sys.settings.key);
-  }
-
-  /**
-   * Start level scene state handler.
-   */
-  protected onStart(): void {
-    this.level.persistLevelSceneConfig(this.config);
-
-    const { centerX, centerY } = this.cameras.main;
-    this.glyphmap.setPosition(centerX, centerY);
-
-    //this.getFsm().go(LevelSceneState.Finish);
   }
 }

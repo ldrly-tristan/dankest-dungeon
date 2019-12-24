@@ -8,11 +8,6 @@ export enum CreatePlayerSceneState {
   Init = 'Init',
 
   /**
-   * Start.
-   */
-  Start = 'Start',
-
-  /**
    * Name.
    */
   Name = 'Name',

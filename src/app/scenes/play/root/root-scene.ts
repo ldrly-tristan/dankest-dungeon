@@ -1,9 +1,6 @@
-import { typestate } from 'typestate';
-
-import { FsmPlugin } from '../../../plugins/fsm';
-import { StorePlugin } from '../../../plugins/store';
 import { PlayerService } from '../../../services/player';
 import { SceneKey } from '../../scene-key.enum';
+import { FsmScene } from '../fsm-scene';
 import { LevelScene } from '../level';
 import { RootSceneEvent } from './root-scene-event.enum';
 import { RootSceneState } from './root-scene-state.enum';
@@ -11,21 +8,11 @@ import { RootSceneState } from './root-scene-state.enum';
 /**
  * Root scene.
  */
-export class RootScene extends Phaser.Scene {
-  /**
-   * Finite state machine plugin.
-   */
-  public readonly fsm: FsmPlugin;
-
+export class RootScene extends FsmScene<RootSceneState> {
   /**
    * Player service.
    */
   public readonly player: PlayerService;
-
-  /**
-   * Store plugin.
-   */
-  public readonly store: StorePlugin;
 
   /**
    * Instantiate root scene.
@@ -38,44 +25,38 @@ export class RootScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.getFsm().go(RootSceneState.Start);
+    const fsm = this.getFsm();
+
+    this.game.events.once(RootSceneEvent.LoadFinished, levelScene => fsm.go(RootSceneState.Play, levelScene));
+
+    if (this.player.getPlayerState().name) {
+      fsm.go(RootSceneState.Load);
+    } else {
+      this.game.events.once(RootSceneEvent.CreateFinished, () => fsm.go(RootSceneState.Load));
+      fsm.go(RootSceneState.Create);
+    }
   }
 
   /**
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.initFsm();
+    this.createFsm(RootSceneState.Init).loadFsm();
   }
 
   /**
-   * Get finite state machine.
+   * Load finite state machine.
    */
-  protected getFsm(): typestate.FiniteStateMachine<RootSceneState> {
-    const fsm = this.fsm.get<RootSceneState>(SceneKey.Root);
+  protected loadFsm(): this {
+    const fsm = this.getFsm();
 
-    if (!fsm) {
-      throw new Error('Root scene finite state machine not found');
-    }
-
-    return fsm;
-  }
-
-  /**
-   * Initialize finite state machine.
-   */
-  protected initFsm(): this {
-    const fsm = this.fsm.create(SceneKey.Root, RootSceneState.Init);
-
-    fsm.from(RootSceneState.Init).to(RootSceneState.Start);
-    fsm.from(RootSceneState.Start).to(RootSceneState.Load);
-    fsm.from(RootSceneState.Start).to(RootSceneState.Create);
+    fsm.from(RootSceneState.Init).to(RootSceneState.Load);
+    fsm.from(RootSceneState.Init).to(RootSceneState.Create);
     fsm.from(RootSceneState.Create).to(RootSceneState.Load);
     fsm.from(RootSceneState.Load).to(RootSceneState.Play);
     fsm.from(RootSceneState.Play).to(RootSceneState.Over);
     fsm.from(RootSceneState.Over).to(RootSceneState.Load);
 
-    fsm.on(RootSceneState.Start, () => this.onStart());
     fsm.on(RootSceneState.Load, () => this.onLoad());
     fsm.on(RootSceneState.Create, () => this.onCreate());
     fsm.on(RootSceneState.Play, (from, levelScene) => this.onPlay(levelScene));
@@ -111,21 +92,5 @@ export class RootScene extends Phaser.Scene {
   protected onPlay(levelScene: LevelScene): void {
     this.scene.add(levelScene.sys.settings.key, levelScene, false);
     this.scene.launch(levelScene.sys.settings.key);
-  }
-
-  /**
-   * Start root scene state handler.
-   */
-  protected onStart(): void {
-    const fsm = this.getFsm();
-
-    this.game.events.once(RootSceneEvent.LoadFinished, levelScene => fsm.go(RootSceneState.Play, levelScene));
-
-    if (this.player.getPlayerState().name) {
-      fsm.go(RootSceneState.Load);
-    } else {
-      this.game.events.once(RootSceneEvent.CreateFinished, () => fsm.go(RootSceneState.Load));
-      fsm.go(RootSceneState.Create);
-    }
   }
 }

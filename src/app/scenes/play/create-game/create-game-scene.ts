@@ -1,26 +1,13 @@
-import { typestate } from 'typestate';
-
-import { FsmPlugin } from '../../../plugins/fsm';
-import { StorePlugin } from '../../../plugins/store';
 import { LevelService } from '../../../services/level';
 import { SceneKey } from '../../scene-key.enum';
+import { FsmScene } from '../fsm-scene';
 import { RootSceneEvent } from '../root';
 import { CreateGameSceneState } from './create-game-scene-state.enum';
 
 /**
  * Create game scene.
  */
-export class CreateGameScene extends Phaser.Scene {
-  /**
-   * Finite state machine plugin interface.
-   */
-  public readonly fsm: FsmPlugin;
-
-  /**
-   * Store plugin interface.
-   */
-  public readonly store: StorePlugin;
-
+export class CreateGameScene extends FsmScene<CreateGameSceneState> {
   /**
    * Level service interface.
    */
@@ -37,40 +24,25 @@ export class CreateGameScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.getFsm().go(CreateGameSceneState.Start);
+    this.getFsm().go(CreateGameSceneState.GenerateLevel);
   }
 
   /**
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.initFsm();
+    this.createFsm(CreateGameSceneState.Init).loadFsm();
   }
 
   /**
-   * Get finite state machine.
+   * Load finite state machine.
    */
-  protected getFsm(): typestate.FiniteStateMachine<CreateGameSceneState> {
-    const fsm = this.fsm.get<CreateGameSceneState>(SceneKey.CreateGame);
+  protected loadFsm(): this {
+    const fsm = this.getFsm();
 
-    if (!fsm) {
-      throw new Error('Create game scene finite state machine not found');
-    }
-
-    return fsm;
-  }
-
-  /**
-   * Initialize finite state machine.
-   */
-  protected initFsm(): this {
-    const fsm = this.fsm.create(SceneKey.CreateGame, CreateGameSceneState.Init);
-
-    fsm.from(CreateGameSceneState.Init).to(CreateGameSceneState.Start);
-    fsm.from(CreateGameSceneState.Start).to(CreateGameSceneState.GenerateLevel);
+    fsm.from(CreateGameSceneState.Init).to(CreateGameSceneState.GenerateLevel);
     fsm.from(CreateGameSceneState.GenerateLevel).to(CreateGameSceneState.Finish);
 
-    fsm.on(CreateGameSceneState.Start, () => this.onStart());
     fsm.on(CreateGameSceneState.GenerateLevel, () => this.onGenerateLevel());
     fsm.on(CreateGameSceneState.Finish, () => this.onFinish());
 
@@ -94,12 +66,5 @@ export class CreateGameScene extends Phaser.Scene {
     this.level.persistLevelSceneConfig(levelSceneConfig);
 
     this.getFsm().go(CreateGameSceneState.Finish);
-  }
-
-  /**
-   * Start create game scene state handler.
-   */
-  protected onStart(): void {
-    this.getFsm().go(CreateGameSceneState.GenerateLevel);
   }
 }

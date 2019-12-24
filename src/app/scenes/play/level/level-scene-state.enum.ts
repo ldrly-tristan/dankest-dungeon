@@ -8,11 +8,6 @@ export enum LevelSceneState {
   Init = 'Init',
 
   /**
-   * Start.
-   */
-  Start = 'Start',
-
-  /**
    * Finish.
    */
   Finish = 'Finish'

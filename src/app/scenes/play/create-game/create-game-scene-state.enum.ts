@@ -8,11 +8,6 @@ export enum CreateGameSceneState {
   Init = 'Init',
 
   /**
-   * Start.
-   */
-  Start = 'Start',
-
-  /**
    * Generate level.
    */
   GenerateLevel = 'GenerateLevel',

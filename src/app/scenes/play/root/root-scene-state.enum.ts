@@ -8,11 +8,6 @@ export enum RootSceneState {
   Init = 'Init',
 
   /**
-   * Start.
-   */
-  Start = 'Start',
-
-  /**
    * Load.
    */
   Load = 'Load',

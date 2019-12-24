@@ -1,25 +1,12 @@
-import { typestate } from 'typestate';
-
-import { FsmPlugin } from '../../../plugins/fsm';
-import { StorePlugin } from '../../../plugins/store';
 import { PlayerService } from '../../../services/player';
 import { SceneKey } from '../../scene-key.enum';
+import { FsmScene } from '../fsm-scene';
 import { CreatePlayerSceneState } from './create-player-scene-state.enum';
 
 /**
  * Create player scene.
  */
-export class CreatePlayerScene extends Phaser.Scene {
-  /**
-   * Finite state machine plugin.
-   */
-  public readonly fsm: FsmPlugin;
-
-  /**
-   * Store plugin.
-   */
-  public readonly store: StorePlugin;
-
+export class CreatePlayerScene extends FsmScene<CreatePlayerSceneState> {
   /**
    * Player service.
    */
@@ -41,40 +28,24 @@ export class CreatePlayerScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.getFsm().go(CreatePlayerSceneState.Start);
+    this.getFsm().go(CreatePlayerSceneState.Name);
   }
 
   /**
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.initFsm();
+    this.createFsm(CreatePlayerSceneState.Init).loadFsm();
   }
 
   /**
-   * Get finite state machine.
+   * Load finite state machine.
    */
-  protected getFsm(): typestate.FiniteStateMachine<CreatePlayerSceneState> {
-    const fsm = this.fsm.get<CreatePlayerSceneState>(SceneKey.CreatePlayer);
+  protected loadFsm(): this {
+    const fsm = this.getFsm();
 
-    if (!fsm) {
-      throw new Error('Create player scene finite state machine not found');
-    }
-
-    return fsm;
-  }
-
-  /**
-   * Initialize finite state machine.
-   */
-  protected initFsm(): this {
-    const fsm = this.fsm.create(SceneKey.CreatePlayer, CreatePlayerSceneState.Init);
-
-    fsm.from(CreatePlayerSceneState.Init).to(CreatePlayerSceneState.Start);
-    fsm.from(CreatePlayerSceneState.Start).to(CreatePlayerSceneState.Name);
+    fsm.from(CreatePlayerSceneState.Init).to(CreatePlayerSceneState.Name);
     fsm.from(CreatePlayerSceneState.Name).to(CreatePlayerSceneState.Finish);
-
-    fsm.on(CreatePlayerSceneState.Start, () => this.onStart());
 
     fsm.onEnter(CreatePlayerSceneState.Name, () => this.onEnterName());
     fsm.on(CreatePlayerSceneState.Name, () => this.onName());
@@ -138,12 +109,5 @@ export class CreatePlayerScene extends Phaser.Scene {
   protected onName(): void {
     const { centerX, centerY } = this.cameras.main;
     this.nameInput.setPosition(centerX, centerY);
-  }
-
-  /**
-   * Start create player scene state handler.
-   */
-  protected onStart(): void {
-    this.getFsm().go(CreatePlayerSceneState.Name);
   }
 }
