@@ -1,7 +1,7 @@
+import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
 import { LevelSceneConfig } from '../../../models/level';
 import { LevelService } from '../../../services/level';
 import { SceneKey } from '../../scene-key.enum';
-import { FsmScene } from '../fsm-scene';
 import { LevelScene } from '../level';
 import { RootSceneEvent } from '../root';
 import { LoadGameSceneState } from './load-game-scene-state.enum';
@@ -16,6 +16,21 @@ export class LoadGameScene extends FsmScene<LoadGameSceneState> {
   public readonly level: LevelService;
 
   /**
+   * Finite state machine configuration.
+   */
+  protected readonly fsmConfig: FsmConfig<LoadGameSceneState> = {
+    startState: LoadGameSceneState.Init,
+    transitions: [{ from: LoadGameSceneState.Init, to: LoadGameSceneState.Finish }],
+    events: [
+      {
+        state: LoadGameSceneState.Finish,
+        type: FsmEventType.On,
+        handler: (from, config: LevelSceneConfig): void => this.onFinish(config)
+      }
+    ]
+  };
+
+  /**
    * Instantiate load game scene.
    */
   public constructor() {
@@ -26,27 +41,7 @@ export class LoadGameScene extends FsmScene<LoadGameSceneState> {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.getFsm().go(LoadGameSceneState.Finish, this.level.generateLevelSceneConfig());
-  }
-
-  /**
-   * Lifecycle method called before all others.
-   */
-  public init(): void {
-    this.createFsm(LoadGameSceneState.Init).loadFsm();
-  }
-
-  /**
-   * Load finite state machine.
-   */
-  protected loadFsm(): this {
-    const fsm = this.fsm.create(SceneKey.LoadGame, LoadGameSceneState.Init);
-
-    fsm.from(LoadGameSceneState.Init).to(LoadGameSceneState.Finish);
-
-    fsm.on(LoadGameSceneState.Finish, (from, config: LevelSceneConfig) => this.onFinish(config));
-
-    return this;
+    this.fsm.go(LoadGameSceneState.Finish, this.level.generateLevelSceneConfig());
   }
 
   /**

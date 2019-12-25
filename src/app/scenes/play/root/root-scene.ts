@@ -1,6 +1,6 @@
+import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
 import { PlayerService } from '../../../services/player';
 import { SceneKey } from '../../scene-key.enum';
-import { FsmScene } from '../fsm-scene';
 import { LevelScene } from '../level';
 import { RootSceneEvent } from './root-scene-event.enum';
 import { RootSceneState } from './root-scene-state.enum';
@@ -15,6 +15,31 @@ export class RootScene extends FsmScene<RootSceneState> {
   public readonly player: PlayerService;
 
   /**
+   * Finite state machine configuration.
+   */
+  protected readonly fsmConfig: FsmConfig<RootSceneState> = {
+    startState: RootSceneState.Init,
+    transitions: [
+      { from: RootSceneState.Init, to: RootSceneState.Load },
+      { from: RootSceneState.Init, to: RootSceneState.Create },
+      { from: RootSceneState.Create, to: RootSceneState.Load },
+      { from: RootSceneState.Load, to: RootSceneState.Play },
+      { from: RootSceneState.Play, to: RootSceneState.Over },
+      { from: RootSceneState.Over, to: RootSceneState.Load }
+    ],
+    events: [
+      { state: RootSceneState.Load, type: FsmEventType.On, handler: (): void => this.onLoad() },
+      { state: RootSceneState.Create, type: FsmEventType.On, handler: (): void => this.onCreate() },
+      {
+        state: RootSceneState.Play,
+        type: FsmEventType.On,
+        handler: (from, levelScene): void => this.onPlay(levelScene)
+      },
+      { state: RootSceneState.Over, type: FsmEventType.On, handler: (): void => this.onOver() }
+    ]
+  };
+
+  /**
    * Instantiate root scene.
    */
   public constructor() {
@@ -25,44 +50,14 @@ export class RootScene extends FsmScene<RootSceneState> {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    const fsm = this.getFsm();
-
-    this.game.events.once(RootSceneEvent.LoadFinished, levelScene => fsm.go(RootSceneState.Play, levelScene));
+    this.game.events.once(RootSceneEvent.LoadFinished, levelScene => this.fsm.go(RootSceneState.Play, levelScene));
 
     if (this.player.getPlayerState().name) {
-      fsm.go(RootSceneState.Load);
+      this.fsm.go(RootSceneState.Load);
     } else {
-      this.game.events.once(RootSceneEvent.CreateFinished, () => fsm.go(RootSceneState.Load));
-      fsm.go(RootSceneState.Create);
+      this.game.events.once(RootSceneEvent.CreateFinished, () => this.fsm.go(RootSceneState.Load));
+      this.fsm.go(RootSceneState.Create);
     }
-  }
-
-  /**
-   * Lifecycle method called before all others.
-   */
-  public init(): void {
-    this.createFsm(RootSceneState.Init).loadFsm();
-  }
-
-  /**
-   * Load finite state machine.
-   */
-  protected loadFsm(): this {
-    const fsm = this.getFsm();
-
-    fsm.from(RootSceneState.Init).to(RootSceneState.Load);
-    fsm.from(RootSceneState.Init).to(RootSceneState.Create);
-    fsm.from(RootSceneState.Create).to(RootSceneState.Load);
-    fsm.from(RootSceneState.Load).to(RootSceneState.Play);
-    fsm.from(RootSceneState.Play).to(RootSceneState.Over);
-    fsm.from(RootSceneState.Over).to(RootSceneState.Load);
-
-    fsm.on(RootSceneState.Load, () => this.onLoad());
-    fsm.on(RootSceneState.Create, () => this.onCreate());
-    fsm.on(RootSceneState.Play, (from, levelScene) => this.onPlay(levelScene));
-    fsm.on(RootSceneState.Over, () => this.onOver());
-
-    return this;
   }
 
   /**

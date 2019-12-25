@@ -1,9 +1,9 @@
 import { AssetKey, AssetType } from '../../../asset-enums';
+import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
 import { StaticTerrainDataIndex } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../plugins/glyphmap';
 import { LevelService } from '../../../services/level';
-import { FsmScene } from '../fsm-scene';
 import { LevelSceneState } from './level-scene-state.enum';
 
 /**
@@ -19,6 +19,21 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    * Level service interface.
    */
   public readonly level: LevelService;
+
+  /**
+   * Finite state machine configuration.
+   */
+  protected readonly fsmConfig: FsmConfig<LevelSceneState> = {
+    startState: LevelSceneState.Init,
+    transitions: [{ from: LevelSceneState.Init, to: LevelSceneState.Finish }],
+    events: [
+      {
+        state: LevelSceneState.Finish,
+        type: FsmEventType.On,
+        handler: (): void => this.onFinish()
+      }
+    ]
+  };
 
   /**
    * Glyphmap.
@@ -50,22 +65,7 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.createFsm(LevelSceneState.Init)
-      .loadFsm()
-      .initGlyphmap();
-  }
-
-  /**
-   * Load finite state machine.
-   */
-  protected loadFsm(): this {
-    const fsm = this.fsm.create(this.sys.settings.key, LevelSceneState.Init);
-
-    fsm.from(LevelSceneState.Init).to(LevelSceneState.Finish);
-
-    fsm.on(LevelSceneState.Finish, () => this.onFinish());
-
-    return this;
+    this.initGlyphmap();
   }
 
   /**

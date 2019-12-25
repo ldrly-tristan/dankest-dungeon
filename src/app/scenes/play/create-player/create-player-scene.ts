@@ -1,6 +1,6 @@
+import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
 import { PlayerService } from '../../../services/player';
 import { SceneKey } from '../../scene-key.enum';
-import { FsmScene } from '../fsm-scene';
 import { CreatePlayerSceneState } from './create-player-scene-state.enum';
 
 /**
@@ -11,6 +11,23 @@ export class CreatePlayerScene extends FsmScene<CreatePlayerSceneState> {
    * Player service.
    */
   public readonly player: PlayerService;
+
+  /**
+   * Finite state machine configuration.
+   */
+  protected readonly fsmConfig: FsmConfig<CreatePlayerSceneState> = {
+    startState: CreatePlayerSceneState.Init,
+    transitions: [
+      { from: CreatePlayerSceneState.Init, to: CreatePlayerSceneState.Name },
+      { from: CreatePlayerSceneState.Name, to: CreatePlayerSceneState.Finish }
+    ],
+    events: [
+      { state: CreatePlayerSceneState.Name, type: FsmEventType.OnEnter, handler: (): boolean => this.onEnterName() },
+      { state: CreatePlayerSceneState.Name, type: FsmEventType.On, handler: (): void => this.onName() },
+      { state: CreatePlayerSceneState.Name, type: FsmEventType.OnExit, handler: (): boolean => this.onExitName() },
+      { state: CreatePlayerSceneState.Finish, type: FsmEventType.On, handler: (): void => this.onFinish() }
+    ]
+  };
 
   /**
    * Name input.
@@ -28,32 +45,7 @@ export class CreatePlayerScene extends FsmScene<CreatePlayerSceneState> {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.getFsm().go(CreatePlayerSceneState.Name);
-  }
-
-  /**
-   * Lifecycle method called before all others.
-   */
-  public init(): void {
-    this.createFsm(CreatePlayerSceneState.Init).loadFsm();
-  }
-
-  /**
-   * Load finite state machine.
-   */
-  protected loadFsm(): this {
-    const fsm = this.getFsm();
-
-    fsm.from(CreatePlayerSceneState.Init).to(CreatePlayerSceneState.Name);
-    fsm.from(CreatePlayerSceneState.Name).to(CreatePlayerSceneState.Finish);
-
-    fsm.onEnter(CreatePlayerSceneState.Name, () => this.onEnterName());
-    fsm.on(CreatePlayerSceneState.Name, () => this.onName());
-    fsm.onExit(CreatePlayerSceneState.Name, () => this.onExitName());
-
-    fsm.on(CreatePlayerSceneState.Finish, () => this.onFinish());
-
-    return this;
+    this.fsm.go(CreatePlayerSceneState.Name);
   }
 
   /**
@@ -70,7 +62,7 @@ export class CreatePlayerScene extends FsmScene<CreatePlayerSceneState> {
 
     if (name && (event.which === 13 || event.keyCode === 13 || event.key === 'Enter')) {
       this.player.persistPlayerState({ name });
-      this.getFsm().go(CreatePlayerSceneState.Finish);
+      this.fsm.go(CreatePlayerSceneState.Finish);
     }
   }
 

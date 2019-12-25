@@ -1,4 +1,4 @@
-import { FsmPlugin } from './fsm';
+import { FsmManagerPlugin, FsmScenePlugin } from './fsm';
 import { GlyphmapPlugin } from './glyphmap';
 import { MapgenPlugin } from './mapgen';
 import { StorePlugin } from './store';
@@ -7,8 +7,13 @@ import { StorePlugin } from './store';
  * Global plugins.
  */
 export const globalPlugins = [
-  FsmPlugin.pluginObjectItem,
+  FsmManagerPlugin.pluginObjectItem,
   GlyphmapPlugin.pluginObjectItem,
   MapgenPlugin.pluginObjectItem,
   StorePlugin.pluginObjectItem
 ];
+
+/**
+ * Scene plugins.
+ */
+export const scenePlugins = [FsmScenePlugin.pluginObjectItem];

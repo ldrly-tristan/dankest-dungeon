@@ -1,24 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TypeState } from 'typestate';
+
+import { Fsm } from './fsm';
+import { FsmConfig } from './fsm-config';
 
 /**
- * Finite state machine plugin.
+ * Finite state machine manager plugin.
  */
-export class FsmPlugin extends Phaser.Plugins.BasePlugin {
+export class FsmManagerPlugin extends Phaser.Plugins.BasePlugin {
   /**
    * Plugin object item.
    */
   public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
-    key: 'FsmPlugin',
-    plugin: FsmPlugin,
-    start: true,
-    mapping: 'fsm'
+    key: 'FsmManagerPlugin',
+    plugin: FsmManagerPlugin,
+    start: true
   };
 
   /**
    * Finite state machine cache.
    */
-  protected cache = new Map<string, TypeState.FiniteStateMachine<any>>();
+  protected cache = new Map<string, Fsm<any>>();
 
   /**
    * Instantiate finite state machine plugin.
@@ -40,14 +41,13 @@ export class FsmPlugin extends Phaser.Plugins.BasePlugin {
    * Create finite state machine & add to cache.
    *
    * @param key Key that identifies the finite state machine.
-   * @param startState Start state.
-   * @param allowImplicitSelfTransition Allow implicit self transition flag.
+   * @param config Configuration.
    */
-  public create<T>(key: string, startState: T, allowImplicitSelfTransition?: boolean): TypeState.FiniteStateMachine<T> {
+  public create<T>(key: string, config: FsmConfig<T>): Fsm<T> {
     let fsm = this.get<T>(key);
 
     if (!fsm) {
-      fsm = new TypeState.FiniteStateMachine<T>(startState, allowImplicitSelfTransition);
+      fsm = new Fsm(config);
       this.cache.set(key, fsm);
     }
 
@@ -69,14 +69,7 @@ export class FsmPlugin extends Phaser.Plugins.BasePlugin {
    * @param callbackfn Callback function.
    * @param thisArg Execution context.
    */
-  public forEach(
-    callbackfn: (
-      value: TypeState.FiniteStateMachine<any>,
-      key: string,
-      map: Map<string, TypeState.FiniteStateMachine<any>>
-    ) => void,
-    thisArg?: any
-  ): void {
+  public forEach(callbackfn: (value: Fsm<any>, key: string, map: Map<string, Fsm<any>>) => void, thisArg?: any): void {
     return this.cache.forEach(callbackfn, thisArg);
   }
 
@@ -85,8 +78,8 @@ export class FsmPlugin extends Phaser.Plugins.BasePlugin {
    *
    * @param key Key that identifies the finite state machine.
    */
-  public get<T>(key: string): TypeState.FiniteStateMachine<T> | void {
-    return this.cache.get(key) as TypeState.FiniteStateMachine<T>;
+  public get<T>(key: string): Fsm<T> | void {
+    return this.cache.get(key) as Fsm<T>;
   }
 
   /**
@@ -104,7 +97,7 @@ export class FsmPlugin extends Phaser.Plugins.BasePlugin {
    * @param key Key that identifies the finite state machine.
    * @param value Finite state machine.
    */
-  public set<T>(key: string, value: TypeState.FiniteStateMachine<T>): this {
+  public set<T>(key: string, value: Fsm<T>): this {
     this.cache.set(key, value);
     return this;
   }

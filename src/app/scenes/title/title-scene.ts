@@ -1,4 +1,4 @@
-import { TitleGlyphmap } from '../../game-objects/glyphmap';
+import { TitleGlyphmap } from '../../game-objects/glyph';
 import { SceneKey } from '../scene-key.enum';
 
 /**
