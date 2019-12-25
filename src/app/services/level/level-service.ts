@@ -1,8 +1,8 @@
 import { AssetKey, AssetType } from '../../asset-enums';
 import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../lib/level';
+import { generateArenaMap } from '../../lib/level/mapgen';
 import { StaticTerrainDataId, StaticTerrainDataIndex, UniqueEntityDataId } from '../../models/entity';
 import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState } from '../../models/level';
-import { MapgenPlugin } from '../../plugins/mapgen';
 import { StorePlugin } from '../../plugins/store';
 import { StoreKey } from '../../stores';
 import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../stores/level';
@@ -118,13 +118,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    * Generate map.
    */
   protected generateMap(seed: string, width: number, height: number): Map<string, number> {
-    const mapgenPlugin = this.pluginManager.get(MapgenPlugin.pluginObjectItem.key) as MapgenPlugin;
-
-    if (!mapgenPlugin) {
-      throw new Error('Mapgen plugin not found');
-    }
-
-    return mapgenPlugin.arena(seed, width, height);
+    return generateArenaMap(seed, width, height);
   }
 
   /**

@@ -1,9 +1,9 @@
 import { Corridor, Room } from 'rot-js/lib/map/features';
 
 /**
- * Generated dungeon map interface.
+ * Dungeon map interface.
  */
-export interface GeneratedDungeonMap {
+export interface DungeonMap {
   /**
    * Map.
    */

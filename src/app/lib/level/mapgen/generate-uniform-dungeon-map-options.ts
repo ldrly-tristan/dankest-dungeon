@@ -1,7 +1,7 @@
 /**
- * Uniform dungeon map generator options interface.
+ * Generate uniform dungeon map options interface.
  */
-export interface UniformDungeonMapgenOptions {
+export interface GenerateUniformDungeonMapOptions {
   /**
    * Room width.
    */

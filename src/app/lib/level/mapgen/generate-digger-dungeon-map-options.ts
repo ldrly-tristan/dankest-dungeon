@@ -1,7 +1,7 @@
 /**
- * Digger dungeon map generator options interface.
+ * Generate digger dungeon map options interface.
  */
-export interface DiggerDungeonMapgenOptions {
+export interface GenerateDiggerDungeonMapOptions {
   /**
    * Room width.
    */

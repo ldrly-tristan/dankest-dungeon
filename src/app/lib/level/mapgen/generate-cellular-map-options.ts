@@ -1,7 +1,7 @@
 /**
- * Cellular map generator options interface.
+ * Generate cellular map options interface.
  */
-export interface CellularMapgenOptions {
+export interface GenerateCellularMapOptions {
   /**
    * Born.
    */

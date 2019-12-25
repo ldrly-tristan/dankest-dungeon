@@ -2,6 +2,6 @@
 import { Options } from 'rot-js/lib/map/rogue';
 
 /**
- * Rogue map generator options interface.
+ * Generate rogue map options interface.
  */
-export interface RogueMapgenOptions extends Options {}
+export interface GenerateRogueMapOptions extends Options {}

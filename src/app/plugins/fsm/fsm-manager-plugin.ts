@@ -13,7 +13,8 @@ export class FsmManagerPlugin extends Phaser.Plugins.BasePlugin {
   public static readonly pluginObjectItem: Phaser.Types.Core.PluginObjectItem = {
     key: 'FsmManagerPlugin',
     plugin: FsmManagerPlugin,
-    start: true
+    start: true,
+    mapping: 'fsmManager'
   };
 
   /**
