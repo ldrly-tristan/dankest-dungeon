@@ -1,1 +1,1 @@
-export { TitleGlyphmap } from './title-glyphmap';
+export { Glyph } from './glyph';

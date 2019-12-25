@@ -2,7 +2,7 @@ import { AssetKey, AssetType } from '../../../asset-enums';
 import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
 import { StaticTerrainDataIndex } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
-import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../plugins/glyphmap';
+import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../game-objects/glyphmap';
 import { LevelService } from '../../../services/level';
 import { LevelSceneState } from './level-scene-state.enum';
 

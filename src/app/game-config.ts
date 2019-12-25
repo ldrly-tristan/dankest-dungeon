@@ -1,3 +1,4 @@
+import { gameObjectPlugins } from './game-objects';
 import { globalPlugins, scenePlugins } from './plugins';
 import { scenes } from './scenes';
 import { globalServices } from './services';
@@ -10,7 +11,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   version: '0.1.0-alpha',
   type: Phaser.AUTO,
   plugins: {
-    global: [...globalPlugins, ...globalServices],
+    global: [...globalPlugins, ...globalServices, ...gameObjectPlugins],
     scene: [...scenePlugins]
   },
   parent: 'body',

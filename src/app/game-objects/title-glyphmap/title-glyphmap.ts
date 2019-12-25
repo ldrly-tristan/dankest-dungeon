@@ -1,4 +1,4 @@
-import { Glyphmap } from '../../plugins/glyphmap';
+import { Glyphmap } from '../glyphmap';
 
 /**
  * Title glyphmap.

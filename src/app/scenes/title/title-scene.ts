@@ -1,4 +1,4 @@
-import { TitleGlyphmap } from '../../game-objects/glyph';
+import { TitleGlyphmapAwareGameObjectFactory } from '../../game-objects/title-glyphmap';
 import { SceneKey } from '../scene-key.enum';
 
 /**
@@ -6,9 +6,9 @@ import { SceneKey } from '../scene-key.enum';
  */
 export class TitleScene extends Phaser.Scene {
   /**
-   * Title glyphmap.
+   * Title glyphmap aware game object factory.
    */
-  protected titleGlyphmap: TitleGlyphmap;
+  public readonly add: TitleGlyphmapAwareGameObjectFactory;
 
   /**
    * Instantiate title scene.
@@ -23,12 +23,12 @@ export class TitleScene extends Phaser.Scene {
   public create(): void {
     const { centerX, centerY } = this.cameras.main;
 
-    this.titleGlyphmap.setPosition(centerX, centerY);
+    const titleGlyphmap = this.add.titleGlyphmap().setPosition(centerX, centerY);
 
     this.events.once(Phaser.Scenes.Events.TRANSITION_START, (fromScene, duration) => {
-      this.titleGlyphmap.setAlpha(0);
+      titleGlyphmap.setAlpha(0);
       this.tweens.add({
-        targets: this.titleGlyphmap,
+        targets: titleGlyphmap,
         alpha: 1,
         duration,
         onComplete: () => (this.input.keyboard.enabled = true)
@@ -40,8 +40,6 @@ export class TitleScene extends Phaser.Scene {
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.titleGlyphmap = this.add.existing(new TitleGlyphmap(this)) as TitleGlyphmap;
-
     this.input.keyboard.enabled = false;
     this.input.keyboard.once(Phaser.Input.Keyboard.Events.ANY_KEY_UP, () => this.scene.start(SceneKey.Root));
   }
