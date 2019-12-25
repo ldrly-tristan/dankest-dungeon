@@ -1,11 +1,11 @@
 import { AssetKey, AssetType } from '../../asset-enums';
 import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../lib/level';
 import { generateArenaMap } from '../../lib/level/mapgen';
+import { StoreKey } from '../../lib/store';
+import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../lib/store/level';
 import { StaticTerrainDataId, StaticTerrainDataIndex, UniqueEntityDataId } from '../../models/entity';
 import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState } from '../../models/level';
-import { StorePlugin } from '../../plugins/store';
-import { StoreKey } from '../../stores';
-import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../stores/level';
+import { StoreManagerService } from '../store';
 
 /**
  * Level service.
@@ -20,6 +20,37 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
     start: true,
     mapping: 'level'
   };
+
+  /**
+   * Store manager.
+   */
+  protected readonly storeManager = this.pluginManager.get(
+    StoreManagerService.pluginObjectItem.key
+  ) as StoreManagerService;
+
+  /**
+   * Level creatures store.
+   */
+  protected readonly levelCreaturesStore = this.storeManager.get<LevelCreaturesStore>(
+    StoreKey.LevelCreatures
+  ) as LevelCreaturesStore;
+
+  /**
+   * Level items store.
+   */
+  protected readonly levelItemsStore = this.storeManager.get<LevelItemsStore>(StoreKey.LevelItems) as LevelItemsStore;
+
+  /**
+   * Level store.
+   */
+  protected readonly levelStore = this.storeManager.get<LevelStore>(StoreKey.Level) as LevelStore;
+
+  /**
+   * Level terrain store.
+   */
+  protected readonly levelTerrainStore = this.storeManager.get<LevelTerrainStore>(
+    StoreKey.LevelTerrain
+  ) as LevelTerrainStore;
 
   /**
    * Instantiate level service.
@@ -45,15 +76,13 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    * @param config Level scene configuration.
    */
   public persistLevelSceneConfig(config?: LevelSceneConfig): this {
-    const { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore } = this.getStores();
-
     const { id, seed, width, height, map, creatures, items, terrain } = config;
 
-    levelStore.update({ id, seed, width, height, map });
+    this.levelStore.update({ id, seed, width, height, map });
 
-    levelCreaturesStore.set(creatures);
-    levelItemsStore.set(items);
-    levelTerrainStore.set(terrain);
+    this.levelCreaturesStore.set(creatures);
+    this.levelItemsStore.set(items);
+    this.levelTerrainStore.set(terrain);
 
     return this;
   }
@@ -90,14 +119,12 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    * Generate level scene configuration from store.
    */
   protected generateLevelSceneConfigFromStore(): LevelSceneConfig {
-    const { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore } = this.getStores();
-
-    const levelCreaturesState = levelCreaturesStore.getValue();
-    const levelItemsState = levelItemsStore.getValue();
-    const levelTerrainState = levelTerrainStore.getValue();
+    const levelCreaturesState = this.levelCreaturesStore.getValue();
+    const levelItemsState = this.levelItemsStore.getValue();
+    const levelTerrainState = this.levelTerrainStore.getValue();
 
     const levelSceneConfig: LevelSceneConfig = {
-      ...levelStore.getValue(),
+      ...this.levelStore.getValue(),
       creatures: levelCreaturesState.ids.map(id => levelCreaturesState.entities[id]),
       items: levelItemsState.ids.map(id => levelItemsState.entities[id]),
       terrain: levelTerrainState.ids.map(id => levelTerrainState.entities[id]),
@@ -119,48 +146,6 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    */
   protected generateMap(seed: string, width: number, height: number): Map<string, number> {
     return generateArenaMap(seed, width, height);
-  }
-
-  /**
-   * Get stores.
-   */
-  protected getStores(): {
-    levelStore: LevelStore;
-    levelCreaturesStore: LevelCreaturesStore;
-    levelItemsStore: LevelItemsStore;
-    levelTerrainStore: LevelTerrainStore;
-  } {
-    const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
-
-    if (!storePlugin) {
-      throw new Error('Store plugin not found');
-    }
-
-    const levelStore = storePlugin.get<LevelStore>(StoreKey.Level);
-
-    if (!levelStore) {
-      throw new Error('Level store not found');
-    }
-
-    const levelCreaturesStore = storePlugin.get<LevelCreaturesStore>(StoreKey.LevelCreatures);
-
-    if (!levelCreaturesStore) {
-      throw new Error('Level creature store not found');
-    }
-
-    const levelItemsStore = storePlugin.get<LevelItemsStore>(StoreKey.LevelItems);
-
-    if (!levelItemsStore) {
-      throw new Error('Level items store not found');
-    }
-
-    const levelTerrainStore = storePlugin.get<LevelTerrainStore>(StoreKey.LevelTerrain);
-
-    if (!levelTerrainStore) {
-      throw new Error('Level terrain store not found');
-    }
-
-    return { levelStore, levelCreaturesStore, levelItemsStore, levelTerrainStore };
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { LevelState } from '../../models/level';
+import { LevelState } from '../../../models/level';
 import { StoreKey } from '../store-key.enum';
 
 /**

@@ -65,16 +65,6 @@ export class FsmManagerPlugin extends Phaser.Plugins.BasePlugin {
   }
 
   /**
-   * Iterate the finite state machine cache.
-   *
-   * @param callbackfn Callback function.
-   * @param thisArg Execution context.
-   */
-  public forEach(callbackfn: (value: Fsm<any>, key: string, map: Map<string, Fsm<any>>) => void, thisArg?: any): void {
-    return this.cache.forEach(callbackfn, thisArg);
-  }
-
-  /**
    * Get finite state machine from cache.
    *
    * @param key Key that identifies the finite state machine.
@@ -90,16 +80,5 @@ export class FsmManagerPlugin extends Phaser.Plugins.BasePlugin {
    */
   public has(key: string): boolean {
     return this.cache.has(key);
-  }
-
-  /**
-   * Set finit state machine in cache.
-   *
-   * @param key Key that identifies the finite state machine.
-   * @param value Finite state machine.
-   */
-  public set<T>(key: string, value: Fsm<T>): this {
-    this.cache.set(key, value);
-    return this;
   }
 }

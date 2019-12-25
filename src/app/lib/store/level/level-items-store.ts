@@ -1,6 +1,6 @@
 import { EntityStore, StoreConfig } from '@datorama/akita';
 
-import { LevelItemsState } from '../../models/level';
+import { LevelItemsState } from '../../../models/level';
 import { StoreKey } from '../store-key.enum';
 
 /**

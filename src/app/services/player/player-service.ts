@@ -1,7 +1,7 @@
+import { StoreKey } from '../../lib/store';
+import { PlayerStore } from '../../lib/store/player';
 import { PlayerState } from '../../models/entity';
-import { StorePlugin } from '../../plugins/store';
-import { StoreKey } from '../../stores';
-import { PlayerStore } from '../../stores/player';
+import { StoreManagerService } from '../store';
 
 /**
  * Player service.
@@ -18,6 +18,13 @@ export class PlayerService extends Phaser.Plugins.BasePlugin {
   };
 
   /**
+   * Player store.
+   */
+  protected readonly playerStore = (this.pluginManager.get(
+    StoreManagerService.pluginObjectItem.key
+  ) as StoreManagerService).get<PlayerStore>(StoreKey.Player) as PlayerStore;
+
+  /**
    * Instantiate player service.
    *
    * @param pluginManager Phaser plugin manager.
@@ -30,7 +37,7 @@ export class PlayerService extends Phaser.Plugins.BasePlugin {
    * Get player state.
    */
   public getPlayerState(): PlayerState {
-    return this.getStore().getValue();
+    return this.playerStore.getValue();
   }
 
   /**
@@ -39,26 +46,7 @@ export class PlayerService extends Phaser.Plugins.BasePlugin {
    * @param playerState Player state.
    */
   public persistPlayerState(playerState: Partial<PlayerState>): this {
-    this.getStore().update(playerState);
+    this.playerStore.update(playerState);
     return this;
-  }
-
-  /**
-   * Get store.
-   */
-  protected getStore(): PlayerStore {
-    const storePlugin = this.pluginManager.get(StorePlugin.pluginObjectItem.key) as StorePlugin;
-
-    if (!storePlugin) {
-      throw new Error('Store plugin not found');
-    }
-
-    const playerStore = storePlugin.get<PlayerStore>(StoreKey.Player);
-
-    if (!playerStore) {
-      throw new Error('Player store not found');
-    }
-
-    return playerStore;
   }
 }

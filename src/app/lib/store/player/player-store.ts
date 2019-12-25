@@ -1,6 +1,6 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { PlayerState } from '../../models/entity';
+import { PlayerState, StaticCreatureDataId } from '../../../models/entity';
 import { StoreKey } from '../store-key.enum';
 
 /**
@@ -14,7 +14,7 @@ export class PlayerStore extends Store<PlayerState> {
   public static createInitialState(): PlayerState {
     return {
       name: '',
-      staticDataId: 'player'
+      staticDataId: StaticCreatureDataId.Player
     };
   }
 
