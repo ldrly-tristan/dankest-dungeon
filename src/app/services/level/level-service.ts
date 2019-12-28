@@ -3,7 +3,14 @@ import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../li
 import { generateArenaMap } from '../../lib/level/mapgen';
 import { StoreKey } from '../../lib/store';
 import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../lib/store/level';
-import { StaticTerrainDataId, StaticTerrainDataIndex, UniqueEntityDataId } from '../../models/entity';
+import {
+  CreatureDataCollection,
+  ItemDataCollection,
+  StaticTerrainDataId,
+  StaticTerrainDataIndex,
+  TerrainDataCollection,
+  UniqueEntityDataId
+} from '../../models/entity';
 import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState } from '../../models/level';
 import { StoreManagerService } from '../store';
 
@@ -59,6 +66,33 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    */
   public constructor(pluginManager: Phaser.Plugins.PluginManager) {
     super(pluginManager);
+  }
+
+  /**
+   * Get level creatures.
+   */
+  public get creatures(): CreatureDataCollection {
+    const levelCreaturesState = this.levelCreaturesStore.getValue();
+
+    return levelCreaturesState.ids.map(id => levelCreaturesState.entities[id]);
+  }
+
+  /**
+   * Get level items.
+   */
+  public get items(): ItemDataCollection {
+    const levelItemsState = this.levelItemsStore.getValue();
+
+    return levelItemsState.ids.map(id => levelItemsState.entities[id]);
+  }
+
+  /**
+   * Get level terrain.
+   */
+  public get terrain(): TerrainDataCollection {
+    const levelTerrainState = this.levelTerrainStore.getValue();
+
+    return levelTerrainState.ids.map(id => levelTerrainState.entities[id]);
   }
 
   /**

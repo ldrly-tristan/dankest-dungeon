@@ -126,6 +126,24 @@ export class Glyphmap extends Phaser.GameObjects.Image {
   }
 
   /**
+   * Get pixel coordinates from glyph position.
+   *
+   * @param x X-coordinate.
+   * @param y Y-coordinate.
+   */
+  public getPixelCoordinates(x: number, y: number): Phaser.Math.Vector2 {
+    const { width, height } = this.rotRectDisplay._options;
+
+    const cellPixelWidth = this.width / width;
+    const cellPixelHeight = this.height / height;
+
+    return new Phaser.Math.Vector2(
+      this.getTopLeft().x + x * cellPixelWidth + cellPixelWidth / 2,
+      this.getTopLeft().y + y * cellPixelHeight + cellPixelHeight / 2
+    );
+  }
+
+  /**
    * Update glyphmap canvas texture.
    */
   public preUpdate(): void {

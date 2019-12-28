@@ -1,5 +1,6 @@
 import { LevelService } from './level';
 import { PlayerService } from './player';
+import { StaticDataService } from './static-data';
 import { StoreManagerService } from './store';
 
 /**
@@ -7,6 +8,7 @@ import { StoreManagerService } from './store';
  */
 export const globalServices = [
   StoreManagerService.pluginObjectItem,
+  StaticDataService.pluginObjectItem,
   LevelService.pluginObjectItem,
   PlayerService.pluginObjectItem
 ];
