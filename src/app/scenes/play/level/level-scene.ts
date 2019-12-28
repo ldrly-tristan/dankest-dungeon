@@ -1,8 +1,10 @@
+import { MapCellPosition } from '../../../lib/level';
 import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
-import { GlyphData, StaticCreatureDataId, UniqueEntityDataId } from '../../../models/entity';
+import { GlyphData, UniqueEntityDataId } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../game-objects/glyphmap';
 import { LevelService } from '../../../services/level';
+import { PlayerService } from '../../../services/player';
 import { StaticDataService } from '../../../services/static-data';
 import { LevelSceneState } from './level-scene-state.enum';
 
@@ -18,7 +20,7 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   /**
    * Glyph font size.
    */
-  protected static readonly glyphFontSize = 24;
+  protected static readonly glyphFontSize = 32;
 
   /**
    * Glyphmap aware game object factory.
@@ -31,9 +33,19 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   public readonly level: LevelService;
 
   /**
+   * Player service.
+   */
+  public readonly player: PlayerService;
+
+  /**
    * Static data service.
    */
   public readonly staticData: StaticDataService;
+
+  /**
+   * Entity glyph index.
+   */
+  protected readonly entityGlyphIndex = new Map<string, Phaser.GameObjects.Image>();
 
   /**
    * Entity position index.
@@ -76,9 +88,14 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   protected glyphSource: Phaser.GameObjects.Text;
 
   /**
-   * Player glyph.
+   * Items glyph group.
    */
-  protected playerGlyph: Phaser.GameObjects.Image;
+  protected itemsGlyphGroup: Phaser.GameObjects.Group;
+
+  /**
+   * Terrain glyph group.
+   */
+  protected terrainGlyphGroup: Phaser.GameObjects.Group;
 
   /**
    * Instantiate level scene.
@@ -95,7 +112,7 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   public create(): void {
     this.level.persistLevelSceneConfig(this.config);
 
-    this.cameras.main.startFollow(this.playerGlyph);
+    this.cameras.main.startFollow(this.entityGlyphIndex.get(UniqueEntityDataId.Player));
 
     //this.getFsm().go(LevelSceneState.Finish);
   }
@@ -107,7 +124,7 @@ export class LevelScene extends FsmScene<LevelSceneState> {
     this.initGlyphmap()
       .initGlyphSource()
       .initGlyphGroups()
-      .initPlayerGlyph();
+      .initEntityGlyphs();
   }
 
   /**
@@ -139,11 +156,26 @@ export class LevelScene extends FsmScene<LevelSceneState> {
     return key;
   }
 
+  /**
+   * Initialize glyph groups.
+   */
   protected initGlyphGroups(): this {
     this.creaturesGlyphGroup = this.add.group(undefined, {
       classType: Phaser.GameObjects.Image,
       name: 'creaturesGlyphGroup',
       'setDepth.value': 3
+    });
+
+    this.itemsGlyphGroup = this.add.group(undefined, {
+      classType: Phaser.GameObjects.Image,
+      name: 'itemsGlyphGroup',
+      'setDepth.value': 2
+    });
+
+    this.terrainGlyphGroup = this.add.group(undefined, {
+      classType: Phaser.GameObjects.Image,
+      name: 'terrainGlyphGroup',
+      'setDepth.value': 1
     });
 
     return this;
@@ -204,19 +236,64 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   }
 
   /**
-   * Initialize player glyph.
+   * Initialize entity glyphs.
    */
-  protected initPlayerGlyph(): this {
-    const staticPlayerData = this.staticData.creatures.get(StaticCreatureDataId.Player);
-    const playerMapCellPosition = this.entityPositionIndex.get(UniqueEntityDataId.Player);
+  protected initEntityGlyphs(): this {
+    Object.entries(this.level.map).forEach(data => {
+      const mapCellPosition = new MapCellPosition(data[0]);
+      const mapCell = data[1];
 
-    if (!playerMapCellPosition) {
-      throw new Error('Player map cell position not found');
-    }
+      const { x, y } = this.glyphmap.getPixelCoordinates(mapCellPosition.x, mapCellPosition.y);
+      const { creatureId, itemIds, terrainId } = mapCell;
 
-    const { x, y } = this.glyphmap.getPixelCoordinates(playerMapCellPosition.x, playerMapCellPosition.y);
+      if (creatureId) {
+        const creature =
+          creatureId === UniqueEntityDataId.Player ? this.player.getPlayerState() : this.level.getCreature(creatureId);
 
-    this.playerGlyph = this.creaturesGlyphGroup.create(x, y, this.getGlyphTextureKey(staticPlayerData.glyph));
+        if (!creature) {
+          throw new Error('Creature not found');
+        }
+
+        const creatureStaticData = this.staticData.creatures.get(creature.staticDataId);
+
+        this.entityGlyphIndex.set(
+          creatureId,
+          this.creaturesGlyphGroup.create(x, y, this.getGlyphTextureKey(creatureStaticData.glyph))
+        );
+      }
+
+      if (itemIds) {
+        itemIds.forEach(itemId => {
+          const item = this.level.getItem(itemId);
+
+          if (!item) {
+            throw new Error('Item not found');
+          }
+
+          const itemStaticData = this.staticData.items.get(item.staticDataId);
+
+          this.entityGlyphIndex.set(
+            itemId,
+            this.itemsGlyphGroup.create(x, y, this.getGlyphTextureKey(itemStaticData.glyph))
+          );
+        });
+      }
+
+      if (terrainId) {
+        const terrain = this.level.getTerrain(terrainId);
+
+        if (!terrain) {
+          throw new Error('Terrain not found');
+        }
+
+        const terrainStaticData = this.staticData.terrain.get(terrain.staticDataId);
+
+        this.entityGlyphIndex.set(
+          terrainId,
+          this.terrainGlyphGroup.create(x, y, this.getGlyphTextureKey(terrainStaticData.glyph))
+        );
+      }
+    });
 
     return this;
   }

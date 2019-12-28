@@ -4,14 +4,17 @@ import { generateArenaMap } from '../../lib/level/mapgen';
 import { StoreKey } from '../../lib/store';
 import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../lib/store/level';
 import {
+  CreatureData,
   CreatureDataCollection,
+  ItemData,
   ItemDataCollection,
   StaticTerrainDataId,
   StaticTerrainDataIndex,
+  TerrainData,
   TerrainDataCollection,
   UniqueEntityDataId
 } from '../../models/entity';
-import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState } from '../../models/level';
+import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState, MapData } from '../../models/level';
 import { StoreManagerService } from '../store';
 
 /**
@@ -69,7 +72,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
-   * Get level creatures.
+   * Get creatures.
    */
   public get creatures(): CreatureDataCollection {
     const levelCreaturesState = this.levelCreaturesStore.getValue();
@@ -78,7 +81,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
-   * Get level items.
+   * Get items.
    */
   public get items(): ItemDataCollection {
     const levelItemsState = this.levelItemsStore.getValue();
@@ -87,7 +90,14 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
-   * Get level terrain.
+   * Get map.
+   */
+  public get map(): MapData {
+    return this.levelStore.getValue().map;
+  }
+
+  /**
+   * Get terrain.
    */
   public get terrain(): TerrainDataCollection {
     const levelTerrainState = this.levelTerrainStore.getValue();
@@ -102,6 +112,33 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    */
   public generateLevelSceneConfig(config?: LevelSceneConfigGeneratorConfig): LevelSceneConfig {
     return config ? this.generateLevelSceneConfigFromConfig(config) : this.generateLevelSceneConfigFromStore();
+  }
+
+  /**
+   * Get creature.
+   *
+   * @param id Creature id.
+   */
+  public getCreature(id: string): CreatureData | void {
+    return this.levelCreaturesStore.getValue().entities[id];
+  }
+
+  /**
+   * Get item.
+   *
+   * @param id Item id.
+   */
+  public getItem(id: string): ItemData | void {
+    return this.levelItemsStore.getValue().entities[id];
+  }
+
+  /**
+   * Get terrain.
+   *
+   * @param id Terrain id.
+   */
+  public getTerrain(id: string): TerrainData | void {
+    return this.levelTerrainStore.getValue().entities[id];
   }
 
   /**
