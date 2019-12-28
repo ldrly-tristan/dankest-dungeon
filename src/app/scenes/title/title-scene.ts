@@ -6,6 +6,16 @@ import { SceneKey } from '../scene-key.enum';
  */
 export class TitleScene extends Phaser.Scene {
   /**
+   * Glyph font family.
+   */
+  protected static readonly glyphFontFamily = 'monospace';
+
+  /**
+   * Glyph font size.
+   */
+  protected static readonly glyphFontSize = 32;
+
+  /**
    * Title glyphmap aware game object factory.
    */
   public readonly add: TitleGlyphmapAwareGameObjectFactory;
@@ -23,7 +33,12 @@ export class TitleScene extends Phaser.Scene {
   public create(): void {
     const { centerX, centerY } = this.cameras.main;
 
-    const titleGlyphmap = this.add.titleGlyphmap().setPosition(centerX, centerY);
+    const titleGlyphmap = this.add.titleGlyphmap(
+      centerX,
+      centerY,
+      TitleScene.glyphFontSize,
+      TitleScene.glyphFontFamily
+    );
 
     this.events.once(Phaser.Scenes.Events.TRANSITION_START, (fromScene, duration) => {
       titleGlyphmap.setAlpha(0);

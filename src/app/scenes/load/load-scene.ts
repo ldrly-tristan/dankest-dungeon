@@ -2,6 +2,8 @@ import { AssetKey, AssetType, AssetUrl } from '../../asset-enums';
 import {
   StaticCreatureDataCollection,
   StaticCreatureDataIndex,
+  StaticItemDataCollection,
+  StaticItemDataIndex,
   StaticTerrainDataCollection,
   StaticTerrainDataIndex
 } from '../../models/entity';
@@ -22,8 +24,9 @@ export class LoadScene extends Phaser.Scene {
    * Lifecycle method called after init & preload.
    */
   public create(): void {
-    this.createTerrainCache()
-      .createCreaturesCache()
+    this.createCreaturesCache()
+      .createItemsCache()
+      .createTerrainCache()
       .transitionToTitleScene();
   }
 
@@ -45,6 +48,21 @@ export class LoadScene extends Phaser.Scene {
     creatures.forEach(c => (staticCreaturesIndex[c.id] = c));
 
     creaturesCache.add(AssetKey.Creatures, staticCreaturesIndex);
+
+    return this;
+  }
+
+  /**
+   * Create items cache.
+   */
+  protected createItemsCache(): this {
+    const itemsCache = this.cache[AssetType.Items] as Phaser.Cache.BaseCache;
+    const items = itemsCache.get(AssetKey.Items) as StaticItemDataCollection;
+
+    const staticItemsIndex: StaticItemDataIndex = {};
+    items.forEach(i => (staticItemsIndex[i.id] = i));
+
+    itemsCache.add(AssetKey.Items, staticItemsIndex);
 
     return this;
   }

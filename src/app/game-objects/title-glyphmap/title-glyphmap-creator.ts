@@ -1,12 +1,10 @@
 import { TitleGlyphmap } from './title-glyphmap';
+import { TitleGlyphmapConfig } from './title-glyphmap-config';
 
 /**
  * Title glyphmap creator.
  *
- * @param config Game object configuration.
+ * @param config Title glyphmap configuration.
  * @param addToScene Add to scene flag.
  */
-export type TitleGlyphmapCreator = (
-  config: Phaser.Types.GameObjects.GameObjectConfig,
-  addToScene?: boolean
-) => TitleGlyphmap;
+export type TitleGlyphmapCreator = (config: TitleGlyphmapConfig, addToScene?: boolean) => TitleGlyphmap;

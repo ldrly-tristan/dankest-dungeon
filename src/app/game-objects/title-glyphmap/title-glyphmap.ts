@@ -42,9 +42,26 @@ export class TitleGlyphmap extends Glyphmap {
    * @param scene Phaser scene.
    * @param x X coordinate.
    * @param y Y coordinate.
+   * @param fontSize Font size.
+   * @param fontFamily Font family.
    */
-  public constructor(scene: Phaser.Scene, x?: number, y?: number) {
-    super(scene, x, y, TitleGlyphmap.title[0].length, TitleGlyphmap.title.length);
+  public constructor(scene: Phaser.Scene, x?: number, y?: number, fontSize?: number, fontFamily?: string) {
+    super(
+      scene,
+      x,
+      y,
+      TitleGlyphmap.title[0].length,
+      TitleGlyphmap.title.length,
+      false,
+      fontSize,
+      1,
+      0,
+      false,
+      fontFamily,
+      '',
+      '#fff',
+      '#000'
+    );
 
     TitleGlyphmap.title.forEach((row, y, array) => {
       const length = row.length;

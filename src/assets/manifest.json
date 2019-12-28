@@ -13,6 +13,11 @@
       },
       {
         "type": "json",
+        "key": "items",
+        "url": "assets/json/items.json"
+      },
+      {
+        "type": "json",
         "key": "terrain",
         "url": "assets/json/terrain.json"
       }
