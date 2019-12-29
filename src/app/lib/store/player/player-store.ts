@@ -14,7 +14,7 @@ export class PlayerStore extends Store<PlayerState> {
   public static createInitialState(): PlayerState {
     return {
       name: '',
-      staticDataId: StaticCreatureDataId.Player
+      staticEntityDataId: StaticCreatureDataId.Player
     };
   }
 

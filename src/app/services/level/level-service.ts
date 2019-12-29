@@ -6,6 +6,8 @@ import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } f
 import {
   CreatureData,
   CreatureDataCollection,
+  EntityData,
+  EntityDataCollection,
   ItemData,
   ItemDataCollection,
   StaticTerrainDataId,
@@ -63,21 +65,19 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   ) as LevelTerrainStore;
 
   /**
-   * Instantiate level service.
-   *
-   * @param pluginManager Phaser plugin manager.
-   */
-  public constructor(pluginManager: Phaser.Plugins.PluginManager) {
-    super(pluginManager);
-  }
-
-  /**
    * Get creatures.
    */
   public get creatures(): CreatureDataCollection {
     const levelCreaturesState = this.levelCreaturesStore.getValue();
 
     return levelCreaturesState.ids.map(id => levelCreaturesState.entities[id]);
+  }
+
+  /**
+   * Get entities.
+   */
+  public get entities(): EntityDataCollection {
+    return [].concat(this.creatures, this.items, this.terrain);
   }
 
   /**
@@ -121,6 +121,15 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    */
   public getCreature(id: string): CreatureData | void {
     return this.levelCreaturesStore.getValue().entities[id];
+  }
+
+  /**
+   * Get entity.
+   *
+   * @param id Entity id.
+   */
+  public getEntity(id: string): EntityData | void {
+    return this.getCreature(id) || this.getItem(id) || this.getTerrain(id);
   }
 
   /**

@@ -3,6 +3,8 @@ import {
   StaticCreatureData,
   StaticCreatureDataId,
   StaticCreatureDataIndex,
+  StaticEntityData,
+  StaticEntityDataId,
   StaticItemData,
   StaticItemDataId,
   StaticItemDataIndex,
@@ -52,4 +54,17 @@ export class StaticDataService extends Phaser.Plugins.BasePlugin {
     StaticTerrainData,
     StaticTerrainDataIndex
   >(this.pluginManager.game.cache, AssetType.Terrain, AssetKey.Terrain);
+
+  /**
+   * Get entity.
+   *
+   * @param staticEntityDataId Static entity data id.
+   */
+  public getEntity(staticEntityDataId: StaticEntityDataId): StaticEntityData<StaticEntityDataId> | void {
+    return (
+      this.creatures.get(staticEntityDataId) ||
+      this.items.get(staticEntityDataId) ||
+      this.terrain.get(staticEntityDataId)
+    );
+  }
 }

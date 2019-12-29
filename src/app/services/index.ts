@@ -1,3 +1,4 @@
+import { GlyphTexturesService } from './glyph-textures';
 import { LevelService } from './level';
 import { PlayerService } from './player';
 import { StaticDataService } from './static-data';
@@ -12,3 +13,5 @@ export const globalServices = [
   LevelService.pluginObjectItem,
   PlayerService.pluginObjectItem
 ];
+
+export const sceneServices = [GlyphTexturesService.pluginObjectItem];

@@ -1,8 +1,10 @@
+import { glyphFontFamily, glyphFontSize } from '../../../consts';
 import { MapCellPosition } from '../../../lib/level';
 import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
-import { GlyphData, UniqueEntityDataId } from '../../../models/entity';
+import { UniqueEntityDataId } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../game-objects/glyphmap';
+import { GlyphTexturesService } from '../../../services/glyph-textures';
 import { LevelService } from '../../../services/level';
 import { PlayerService } from '../../../services/player';
 import { StaticDataService } from '../../../services/static-data';
@@ -13,19 +15,14 @@ import { LevelSceneState } from './level-scene-state.enum';
  */
 export class LevelScene extends FsmScene<LevelSceneState> {
   /**
-   * Glyph font family.
-   */
-  protected static readonly glyphFontFamily = 'monospace';
-
-  /**
-   * Glyph font size.
-   */
-  protected static readonly glyphFontSize = 32;
-
-  /**
    * Glyphmap aware game object factory.
    */
   public readonly add: GlyphmapAwareGameObjectFactory;
+
+  /**
+   * Glyph textures service.
+   */
+  public readonly glyphTextures: GlyphTexturesService;
 
   /**
    * Level service.
@@ -83,11 +80,6 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   protected glyphmap: Glyphmap;
 
   /**
-   * Glyph source.
-   */
-  protected glyphSource: Phaser.GameObjects.Text;
-
-  /**
    * Items glyph group.
    */
   protected itemsGlyphGroup: Phaser.GameObjects.Group;
@@ -122,60 +114,68 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    */
   public init(): void {
     this.initGlyphmap()
-      .initGlyphSource()
       .initGlyphGroups()
       .initEntityGlyphs();
   }
 
   /**
-   * Get glyph texture key. Creates texture if does not exist.
-   *
-   * @param glyphData Glyph data.
+   * Initialize entity glyphs.
    */
-  protected getGlyphTextureKey(glyphData: GlyphData): string {
-    const { ch, fg, bg } = glyphData;
+  protected initEntityGlyphs(): this {
+    Object.entries(this.level.map).forEach(data => {
+      const mapCellPosition = new MapCellPosition(data[0]);
+      const mapCell = data[1];
 
-    const key = `${ch}${fg}${bg}`;
+      const { x, y } = this.glyphmap.getPixelCoordinates(mapCellPosition.x, mapCellPosition.y);
+      const { creatureId, itemIds, terrainId } = mapCell;
 
-    if (!this.textures.exists(key)) {
-      this.glyphSource.setText(ch);
-      this.glyphSource.setColor(fg);
-      this.glyphSource.setBackgroundColor(bg);
+      [
+        { type: 'creatures', ids: creatureId ? [creatureId] : [] },
+        { type: 'items', ids: itemIds ? itemIds : [] },
+        { type: 'terrain', ids: terrainId ? [terrainId] : [] }
+      ].forEach(config => {
+        config.ids.forEach(id => {
+          const entity = id === UniqueEntityDataId.Player ? this.player.getPlayerState() : this.level.getEntity(id);
 
-      const canvas = Phaser.Display.Canvas.CanvasPool.create(
-        this,
-        this.glyphSource.canvas.width,
-        this.glyphSource.canvas.height
-      );
+          if (!entity) {
+            throw new Error(`Entity not found: ${id}`);
+          }
 
-      canvas.getContext('2d').drawImage(this.glyphSource.canvas, 0, 0);
+          const entityStaticData = this.staticData.getEntity(entity.staticEntityDataId);
 
-      this.textures.addCanvas(key, canvas);
-    }
+          if (!entityStaticData) {
+            throw new Error(`Static entity data not found: ${entity.staticEntityDataId}`);
+          }
 
-    return key;
+          this.entityGlyphIndex.set(
+            id,
+            this[`${config.type}GlyphGroup`].create(x, y, this.glyphTextures.get(entityStaticData.glyph).key)
+          );
+        });
+      });
+    });
+
+    return this;
   }
 
   /**
    * Initialize glyph groups.
    */
   protected initGlyphGroups(): this {
-    this.creaturesGlyphGroup = this.add.group(undefined, {
-      classType: Phaser.GameObjects.Image,
-      name: 'creaturesGlyphGroup',
-      'setDepth.value': 3
-    });
+    const classType = Phaser.GameObjects.Image;
 
-    this.itemsGlyphGroup = this.add.group(undefined, {
-      classType: Phaser.GameObjects.Image,
-      name: 'itemsGlyphGroup',
-      'setDepth.value': 2
-    });
+    [
+      { type: 'creatures', config: { 'setDepth.value': 3 } },
+      { type: 'items', config: { 'setDepth.value': 2 } },
+      { type: 'terrain', config: { 'setDepth.value': 1 } }
+    ].forEach(config => {
+      const name = `${config.type}GlyphGroup`;
 
-    this.terrainGlyphGroup = this.add.group(undefined, {
-      classType: Phaser.GameObjects.Image,
-      name: 'terrainGlyphGroup',
-      'setDepth.value': 1
+      this[name] = this.add.group(undefined, {
+        classType,
+        name,
+        ...config.config
+      });
     });
 
     return this;
@@ -193,11 +193,11 @@ export class LevelScene extends FsmScene<LevelSceneState> {
       width,
       height,
       false,
-      LevelScene.glyphFontSize,
+      glyphFontSize,
       1,
       0,
       false,
-      LevelScene.glyphFontFamily,
+      glyphFontFamily,
       '',
       '#fff',
       '#000'
@@ -214,86 +214,6 @@ export class LevelScene extends FsmScene<LevelSceneState> {
         }
       }
     }
-
-    return this;
-  }
-
-  /**
-   * Initialize glyph source.
-   */
-  protected initGlyphSource(): this {
-    this.glyphSource = this.make.text(
-      {
-        text: '',
-        style: {
-          fontFamily: LevelScene.glyphFontFamily,
-          fontSize: `${LevelScene.glyphFontSize}px`
-        }
-      },
-      false
-    );
-    return this;
-  }
-
-  /**
-   * Initialize entity glyphs.
-   */
-  protected initEntityGlyphs(): this {
-    Object.entries(this.level.map).forEach(data => {
-      const mapCellPosition = new MapCellPosition(data[0]);
-      const mapCell = data[1];
-
-      const { x, y } = this.glyphmap.getPixelCoordinates(mapCellPosition.x, mapCellPosition.y);
-      const { creatureId, itemIds, terrainId } = mapCell;
-
-      if (creatureId) {
-        const creature =
-          creatureId === UniqueEntityDataId.Player ? this.player.getPlayerState() : this.level.getCreature(creatureId);
-
-        if (!creature) {
-          throw new Error('Creature not found');
-        }
-
-        const creatureStaticData = this.staticData.creatures.get(creature.staticDataId);
-
-        this.entityGlyphIndex.set(
-          creatureId,
-          this.creaturesGlyphGroup.create(x, y, this.getGlyphTextureKey(creatureStaticData.glyph))
-        );
-      }
-
-      if (itemIds) {
-        itemIds.forEach(itemId => {
-          const item = this.level.getItem(itemId);
-
-          if (!item) {
-            throw new Error('Item not found');
-          }
-
-          const itemStaticData = this.staticData.items.get(item.staticDataId);
-
-          this.entityGlyphIndex.set(
-            itemId,
-            this.itemsGlyphGroup.create(x, y, this.getGlyphTextureKey(itemStaticData.glyph))
-          );
-        });
-      }
-
-      if (terrainId) {
-        const terrain = this.level.getTerrain(terrainId);
-
-        if (!terrain) {
-          throw new Error('Terrain not found');
-        }
-
-        const terrainStaticData = this.staticData.terrain.get(terrain.staticDataId);
-
-        this.entityGlyphIndex.set(
-          terrainId,
-          this.terrainGlyphGroup.create(x, y, this.getGlyphTextureKey(terrainStaticData.glyph))
-        );
-      }
-    });
 
     return this;
   }

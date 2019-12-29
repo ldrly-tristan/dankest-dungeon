@@ -5,7 +5,7 @@ import { StaticEntityDataId } from './static-entity-data-id';
  */
 export interface EntityData {
   /**
-   * Static data id.
+   * Static entity data id.
    */
-  staticDataId: StaticEntityDataId;
+  staticEntityDataId: StaticEntityDataId;
 }

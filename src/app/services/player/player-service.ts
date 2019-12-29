@@ -25,15 +25,6 @@ export class PlayerService extends Phaser.Plugins.BasePlugin {
   ) as StoreManagerService).get<PlayerStore>(StoreKey.Player) as PlayerStore;
 
   /**
-   * Instantiate player service.
-   *
-   * @param pluginManager Phaser plugin manager.
-   */
-  public constructor(pluginManager: Phaser.Plugins.PluginManager) {
-    super(pluginManager);
-  }
-
-  /**
    * Get player state.
    */
   public getPlayerState(): PlayerState {

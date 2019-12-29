@@ -1,7 +1,7 @@
 import { gameObjectPlugins } from './game-objects';
 import { globalPlugins, scenePlugins } from './plugins';
 import { scenes } from './scenes';
-import { globalServices } from './services';
+import { globalServices, sceneServices } from './services';
 
 /**
  * Game configuration.
@@ -12,7 +12,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   plugins: {
     global: [...globalPlugins, ...globalServices, ...gameObjectPlugins],
-    scene: [...scenePlugins]
+    scene: [...scenePlugins, ...sceneServices]
   },
   parent: 'body',
   dom: {

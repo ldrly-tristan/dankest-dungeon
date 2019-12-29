@@ -12,7 +12,7 @@ export class MapCellPosition {
       return position.split(',').map(v => parseInt(v));
     }
 
-    throw new Error('Invalid position string');
+    throw new Error(`Invalid position string: ${position}`);
   }
 
   /**
