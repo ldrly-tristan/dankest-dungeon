@@ -1,6 +1,4 @@
-import { AssetKey, AssetType } from '../../asset-enums';
-import { EntityPositionIndex, MapCellPosition, StaticTerrainMap } from '../../lib/level';
-import { generateArenaMap } from '../../lib/level/mapgen';
+import { LevelSceneConfigGenerator } from '../../lib/level';
 import { StoreKey } from '../../lib/store';
 import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../lib/store/level';
 import {
@@ -10,13 +8,11 @@ import {
   EntityDataCollection,
   ItemData,
   ItemDataCollection,
-  StaticTerrainDataId,
-  StaticTerrainDataIndex,
   TerrainData,
-  TerrainDataCollection,
-  UniqueEntityDataId
+  TerrainDataCollection
 } from '../../models/entity';
-import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState, MapData } from '../../models/level';
+import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, MapData } from '../../models/level';
+import { StaticDataService } from '../static-data';
 import { StoreManagerService } from '../store';
 
 /**
@@ -53,6 +49,14 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   protected readonly levelItemsStore = this.storeManager.get<LevelItemsStore>(StoreKey.LevelItems) as LevelItemsStore;
 
   /**
+   * Level scene configuration generator.
+   */
+  protected readonly levelSceneConfigGenerator = new LevelSceneConfigGenerator(
+    this,
+    this.pluginManager.get(StaticDataService.pluginObjectItem.key) as StaticDataService
+  );
+
+  /**
    * Level store.
    */
   protected readonly levelStore = this.storeManager.get<LevelStore>(StoreKey.Level) as LevelStore;
@@ -81,6 +85,20 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Get height.
+   */
+  public get height(): number {
+    return this.levelStore.getValue().height;
+  }
+
+  /**
+   * Get id.
+   */
+  public get id(): string {
+    return this.levelStore.getValue().id;
+  }
+
+  /**
    * Get items.
    */
   public get items(): ItemDataCollection {
@@ -97,6 +115,13 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Get seed.
+   */
+  public get seed(): string {
+    return this.levelStore.getValue().seed;
+  }
+
+  /**
    * Get terrain.
    */
   public get terrain(): TerrainDataCollection {
@@ -106,12 +131,21 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Get width.
+   */
+  public get width(): number {
+    return this.levelStore.getValue().width;
+  }
+
+  /**
    * Generate level scene config.
    *
    * @param config Level scene configuration generator configuration.
    */
   public generateLevelSceneConfig(config?: LevelSceneConfigGeneratorConfig): LevelSceneConfig {
-    return config ? this.generateLevelSceneConfigFromConfig(config) : this.generateLevelSceneConfigFromStore();
+    return config
+      ? this.levelSceneConfigGenerator.generateLevelSceneConfigFromConfig(config)
+      : this.levelSceneConfigGenerator.generateLevelSceneConfigFromStore();
   }
 
   /**
@@ -163,124 +197,6 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
     this.levelCreaturesStore.set(creatures);
     this.levelItemsStore.set(items);
     this.levelTerrainStore.set(terrain);
-
-    return this;
-  }
-
-  /**
-   * Generate level scene configuration from configuration.
-   *
-   * @param config Level scene configuration generator configration.
-   */
-  protected generateLevelSceneConfigFromConfig(config: LevelSceneConfigGeneratorConfig): LevelSceneConfig {
-    const { id, seed, width, height } = config;
-
-    const levelState: LevelState = { id, seed, width, height, map: {} };
-
-    const levelSceneConfig: LevelSceneConfig = {
-      ...levelState,
-      creatures: [],
-      items: [],
-      terrain: [],
-      staticTerrainMap: new StaticTerrainMap(),
-      entityPositionIndex: new EntityPositionIndex()
-    };
-
-    const map = this.generateMap(seed, width, height);
-
-    this.placePlayer(levelSceneConfig, 4, 4)
-      .populateStaticTerrainMap(levelSceneConfig, map)
-      .populateEntityPositionIndex(levelSceneConfig);
-
-    return levelSceneConfig;
-  }
-
-  /**
-   * Generate level scene configuration from store.
-   */
-  protected generateLevelSceneConfigFromStore(): LevelSceneConfig {
-    const levelCreaturesState = this.levelCreaturesStore.getValue();
-    const levelItemsState = this.levelItemsStore.getValue();
-    const levelTerrainState = this.levelTerrainStore.getValue();
-
-    const levelSceneConfig: LevelSceneConfig = {
-      ...this.levelStore.getValue(),
-      creatures: levelCreaturesState.ids.map(id => levelCreaturesState.entities[id]),
-      items: levelItemsState.ids.map(id => levelItemsState.entities[id]),
-      terrain: levelTerrainState.ids.map(id => levelTerrainState.entities[id]),
-      staticTerrainMap: new StaticTerrainMap(),
-      entityPositionIndex: new EntityPositionIndex()
-    };
-
-    const { seed, width, height } = levelSceneConfig;
-
-    const map = this.generateMap(seed, width, height);
-
-    this.populateStaticTerrainMap(levelSceneConfig, map).populateEntityPositionIndex(levelSceneConfig);
-
-    return levelSceneConfig;
-  }
-
-  /**
-   * Generate map.
-   */
-  protected generateMap(seed: string, width: number, height: number): Map<string, number> {
-    return generateArenaMap(seed, width, height);
-  }
-
-  /**
-   * Place player.
-   *
-   * @param levelSceneConfig Level scene configuration
-   * @param x X-coordinate.
-   * @param y Y-coordinate.
-   */
-  protected placePlayer(levelSceneConfig: LevelSceneConfig, x: number, y: number): this {
-    const position = new MapCellPosition(x, y);
-
-    const mapCellData = levelSceneConfig.map[position.toString()] || {};
-
-    mapCellData.creatureId = UniqueEntityDataId.Player;
-
-    levelSceneConfig.map[position.toString()] = mapCellData;
-
-    return this;
-  }
-
-  /**
-   * Populate entity position index.
-   *
-   * @param levelSceneConfig Level scene configuration.
-   */
-  protected populateEntityPositionIndex(levelSceneConfig: LevelSceneConfig): this {
-    Object.keys(levelSceneConfig.map).forEach(position => {
-      const mapCellData = levelSceneConfig.map[position];
-
-      [mapCellData.creatureId, mapCellData.terrainId]
-        .concat(mapCellData.itemIds)
-        .forEach(id => levelSceneConfig.entityPositionIndex.set(id, new MapCellPosition(position)));
-    });
-
-    return this;
-  }
-
-  /**
-   * Populate static terrain map.
-   *
-   * @param levelSceneConfig Level scene configuration.
-   * @param map Source map.
-   */
-  protected populateStaticTerrainMap(levelSceneConfig: LevelSceneConfig, map: Map<string, number>): this {
-    const staticTerrainIndex = this.game.cache[AssetType.Terrain].get(AssetKey.Terrain) as StaticTerrainDataIndex;
-
-    map.forEach((value, position) => {
-      const { x, y } = new MapCellPosition(position);
-      levelSceneConfig.staticTerrainMap.set(
-        x,
-        y,
-        value ? staticTerrainIndex[StaticTerrainDataId.Wall].id : staticTerrainIndex[StaticTerrainDataId.Floor].id
-      );
-    });
 
     return this;
   }
