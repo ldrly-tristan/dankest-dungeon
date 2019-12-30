@@ -1,5 +1,5 @@
 import { glyphFontFamily, glyphFontSize } from '../../../consts';
-import { MapCellPosition } from '../../../lib/level';
+import { MapCellPosition, Scheduler } from '../../../lib/level';
 import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
 import { UniqueEntityDataId } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
@@ -54,8 +54,32 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    */
   protected readonly fsmConfig: FsmConfig<LevelSceneState> = {
     startState: LevelSceneState.Init,
-    transitions: [{ from: LevelSceneState.Init, to: LevelSceneState.Finish }],
+    transitions: [
+      { from: LevelSceneState.Init, to: LevelSceneState.PlayerTurn },
+      { from: LevelSceneState.PlayerTurn, to: LevelSceneState.ProcessNonPlayerTurns },
+      { from: LevelSceneState.PlayerTurn, to: LevelSceneState.Finish },
+      { from: LevelSceneState.ProcessNonPlayerTurns, to: LevelSceneState.UpdateUi },
+      { from: LevelSceneState.UpdateUi, to: LevelSceneState.PlayerTurn }
+    ],
     events: [
+      {
+        state: LevelSceneState.PlayerTurn,
+        type: FsmEventType.On,
+        handler: (from: LevelSceneState, endPlayerTurn: (value?: void | PromiseLike<void>) => void): void =>
+          this.onPlayerTurn(endPlayerTurn)
+      },
+      {
+        state: LevelSceneState.ProcessNonPlayerTurns,
+        type: FsmEventType.On,
+        handler: (from: LevelSceneState, endPlayerTurn: (value?: void | PromiseLike<void>) => void): void =>
+          this.onProcessNonPlayerTurns(endPlayerTurn)
+      },
+      {
+        state: LevelSceneState.UpdateUi,
+        type: FsmEventType.On,
+        handler: (from: LevelSceneState, endPlayerTurn: (value?: void | PromiseLike<void>) => void): void =>
+          this.onUpdateUi(endPlayerTurn)
+      },
       {
         state: LevelSceneState.Finish,
         type: FsmEventType.On,
@@ -63,6 +87,11 @@ export class LevelScene extends FsmScene<LevelSceneState> {
       }
     ]
   };
+
+  /**
+   * Scheduler.
+   */
+  protected readonly scheduler = new Scheduler();
 
   /**
    * Static terrain map.
@@ -104,9 +133,7 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   public create(): void {
     this.level.persistLevelSceneConfig(this.config);
 
-    this.cameras.main.startFollow(this.entityGlyphIndex.get(UniqueEntityDataId.Player));
-
-    //this.getFsm().go(LevelSceneState.Finish);
+    this.scheduler.run((item: string, scheduler: Scheduler) => this.handleScheduledItem(item, scheduler));
   }
 
   /**
@@ -115,7 +142,27 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   public init(): void {
     this.initGlyphmap()
       .initGlyphGroups()
-      .initEntityGlyphs();
+      .initEntityGlyphs()
+      .initScheduler();
+  }
+
+  /**
+   * Handle scheduled item.
+   *
+   * @param item Item.
+   * @param scheduler Scheduler.
+   */
+  protected handleScheduledItem(item: string, scheduler: Scheduler): Promise<void> | void {
+    if (item === UniqueEntityDataId.Player) {
+      switch (this.fsm.currentState) {
+        case LevelSceneState.Init:
+          return new Promise(endPlayerTurn => this.fsm.go(LevelSceneState.PlayerTurn, endPlayerTurn));
+        case LevelSceneState.ProcessNonPlayerTurns:
+          return new Promise(endPlayerTurn => this.fsm.go(LevelSceneState.UpdateUi, endPlayerTurn));
+      }
+    }
+
+    /** @todo handle non player action... */
   }
 
   /**
@@ -219,9 +266,51 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   }
 
   /**
+   * Initialize scheduler.
+   */
+  protected initScheduler(): this {
+    this.scheduler.add(UniqueEntityDataId.Player, true);
+    return this;
+  }
+
+  /**
    * Finish level scene state handler.
    */
   protected onFinish(): void {
     this.scene.stop(this.sys.settings.key);
+  }
+
+  /**
+   * Player turn level scene state handler.
+   *
+   * @param endPlayerTurn End player turn callback.
+   */
+  protected onPlayerTurn(endPlayerTurn: (value?: void | PromiseLike<void>) => void): void {
+    console.log('Player Turn');
+    this.cameras.main.startFollow(this.entityGlyphIndex.get(UniqueEntityDataId.Player));
+
+    /** @todo handle player input... */
+    setTimeout(() => this.fsm.go(LevelSceneState.ProcessNonPlayerTurns, endPlayerTurn), 1000);
+  }
+
+  /**
+   * Process non-player turns level scene state handler.
+   *
+   * @param endPlayerTurn End player turn callback.
+   */
+  protected onProcessNonPlayerTurns(endPlayerTurn: (value?: void | PromiseLike<void>) => void): void {
+    console.log('Process Non-Player Turns');
+    endPlayerTurn();
+  }
+
+  /**
+   * Update user interface level scene state handler.
+   *
+   * @param endPlayerTurn End player turn callback.
+   */
+  protected onUpdateUi(endPlayerTurn: (value?: void | PromiseLike<void>) => void): void {
+    console.log('Update UI');
+    /** @todo update ui based on queued actions & their results... */
+    this.fsm.go(LevelSceneState.PlayerTurn, endPlayerTurn);
   }
 }
