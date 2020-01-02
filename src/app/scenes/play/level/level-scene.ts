@@ -1,7 +1,7 @@
 import { glyphFontFamily, glyphFontSize } from '../../../consts';
-import { MapCellPosition, Scheduler } from '../../../lib/level';
+import { MapCellPosition, PlayerTurnInputManager, Scheduler } from '../../../lib/level';
 import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
-import { UniqueEntityDataId } from '../../../models/entity';
+import { StaticTerrainData, StaticTerrainDataId, UniqueEntityDataId } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../game-objects/glyphmap';
 import { GlyphTexturesService } from '../../../services/glyph-textures';
@@ -89,6 +89,11 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   };
 
   /**
+   * Player turn input manager.
+   */
+  protected playerTurnInput = new PlayerTurnInputManager(this);
+
+  /**
    * Scheduler.
    */
   protected readonly scheduler = new Scheduler();
@@ -128,6 +133,13 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   }
 
   /**
+   * Get player position.
+   */
+  public get playerPosition(): MapCellPosition | void {
+    return this.entityPositionIndex.get(UniqueEntityDataId.Player);
+  }
+
+  /**
    * Lifecycle method called after init & preload.
    */
   public create(): void {
@@ -143,7 +155,58 @@ export class LevelScene extends FsmScene<LevelSceneState> {
     this.initGlyphmap()
       .initGlyphGroups()
       .initEntityGlyphs()
-      .initScheduler();
+      .initScheduler()
+      .initPlayerTurnInputManager();
+  }
+
+  /**
+   * Test if specified map cell position blocks movement.
+   *
+   * @param x X-coordinate.
+   * @param y Y-coordinate.
+   */
+  public blocksMove(x: number, y: number): boolean {
+    const mapCellPosition = new MapCellPosition(x, y);
+
+    const mapCell = this.level.getMapCell(mapCellPosition);
+
+    let staticTerrainDataId: StaticTerrainDataId | void;
+    let useStatic = true;
+
+    if (mapCell) {
+      const { creatureId, terrainId } = mapCell;
+
+      if (creatureId) {
+        return true;
+      }
+
+      if (terrainId) {
+        const terrainData = this.level.getTerrain(terrainId);
+
+        if (!terrainData) {
+          throw new Error(`Terrain entity data not found: ${terrainId}`);
+        }
+
+        staticTerrainDataId = terrainData.staticEntityDataId as StaticTerrainDataId;
+        useStatic = false;
+      }
+    }
+
+    if (useStatic) {
+      staticTerrainDataId = this.staticTerrainMap.get(x, y);
+    }
+
+    if (!staticTerrainDataId) {
+      throw new Error(`Static terrain data id not found: ${mapCellPosition}`);
+    }
+
+    const staticTerrainData = this.staticData.terrain.get(staticTerrainDataId);
+
+    if (!staticTerrainData) {
+      throw new Error(`Static terrain data not found: ${mapCellPosition}`);
+    }
+
+    return staticTerrainData.blockMove;
   }
 
   /**
@@ -255,13 +318,24 @@ export class LevelScene extends FsmScene<LevelSceneState> {
         const staticTerrainId = this.staticTerrainMap.get(x, y);
 
         if (staticTerrainId) {
-          const { ch, fg, bg } = this.staticData.terrain.get(staticTerrainId).glyph;
+          const staticTerrainData = this.staticData.terrain.get(staticTerrainId);
+
+          if (!staticTerrainData) {
+            throw new Error(`Static terrain data not found: ${staticTerrainId}`);
+          }
+
+          const { ch, fg, bg } = staticTerrainData.glyph;
 
           this.glyphmap.putGlyphAt(x, y, ch, fg, bg);
         }
       }
     }
 
+    return this;
+  }
+
+  protected initPlayerTurnInputManager(): this {
+    this.playerTurnInput.init();
     return this;
   }
 
@@ -288,9 +362,7 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   protected onPlayerTurn(endPlayerTurn: (value?: void | PromiseLike<void>) => void): void {
     console.log('Player Turn');
     this.cameras.main.startFollow(this.entityGlyphIndex.get(UniqueEntityDataId.Player));
-
-    /** @todo handle player input... */
-    setTimeout(() => this.fsm.go(LevelSceneState.ProcessNonPlayerTurns, endPlayerTurn), 1000);
+    this.playerTurnInput.listen(() => this.fsm.go(LevelSceneState.ProcessNonPlayerTurns, endPlayerTurn));
   }
 
   /**

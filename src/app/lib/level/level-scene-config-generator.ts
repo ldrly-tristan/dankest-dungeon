@@ -125,13 +125,17 @@ export class LevelSceneConfigGenerator {
   protected populateStaticTerrainMap(levelSceneConfig: LevelSceneConfig, map: Map<string, number>): this {
     map.forEach((value, position) => {
       const { x, y } = new MapCellPosition(position);
-      levelSceneConfig.staticTerrainMap.set(
-        x,
-        y,
-        value
-          ? this.staticData.terrain.get(StaticTerrainDataId.Wall).id
-          : this.staticData.terrain.get(StaticTerrainDataId.Floor).id
-      );
+
+      const wallStaticData = this.staticData.terrain.get(StaticTerrainDataId.Wall);
+      const floorStaticData = this.staticData.terrain.get(StaticTerrainDataId.Floor);
+
+      if (!wallStaticData) {
+        throw new Error('Wall static data not found');
+      } else if (!floorStaticData) {
+        throw new Error('Floor static data not found');
+      }
+
+      levelSceneConfig.staticTerrainMap.set(x, y, value ? wallStaticData.id : floorStaticData.id);
     });
 
     return this;

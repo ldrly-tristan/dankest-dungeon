@@ -1,4 +1,4 @@
-import { LevelSceneConfigGenerator } from '../../lib/level';
+import { LevelSceneConfigGenerator, MapCellPosition } from '../../lib/level';
 import { StoreKey } from '../../lib/store';
 import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../lib/store/level';
 import {
@@ -11,7 +11,7 @@ import {
   TerrainData,
   TerrainDataCollection
 } from '../../models/entity';
-import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, MapData } from '../../models/level';
+import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, MapCellData, MapData } from '../../models/level';
 import { StaticDataService } from '../static-data';
 import { StoreManagerService } from '../store';
 
@@ -173,6 +173,15 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    */
   public getItem(id: string): ItemData | void {
     return this.levelItemsStore.getValue().entities[id];
+  }
+
+  /**
+   * Get map cell.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public getMapCell(mapCellPosition: MapCellPosition): MapCellData | void {
+    return this.map[mapCellPosition.toString()];
   }
 
   /**

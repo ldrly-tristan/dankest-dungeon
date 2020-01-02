@@ -30,7 +30,7 @@ export class StaticEntityDataAccessor<T, U extends StaticEntityData<T>, V> {
    *
    * @param staticEntityDataId Static entity data id.
    */
-  public get(staticEntityDataId: StaticEntityDataId): U {
+  public get(staticEntityDataId: StaticEntityDataId): U | void {
     return this.index[staticEntityDataId];
   }
 }
