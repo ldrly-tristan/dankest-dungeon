@@ -1,4 +1,4 @@
-import { StaticEntityDataId } from './static-entity-data-id';
+import { StaticEntityDataId } from '../../lib/entity';
 
 /**
  * Entity data.

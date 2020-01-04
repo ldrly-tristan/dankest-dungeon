@@ -1,4 +1,5 @@
-import { LevelSceneConfigGenerator, MapCellPosition } from '../../lib/level';
+import { StaticTerrainDataId, UniqueEntityDataId } from '../../lib/entity';
+import { EntityPositionIndex, LevelSceneConfigGenerator, MapCellPosition, StaticTerrainMap } from '../../lib/level';
 import { StoreKey } from '../../lib/store';
 import { LevelCreaturesStore, LevelItemsStore, LevelStore, LevelTerrainStore } from '../../lib/store/level';
 import {
@@ -8,6 +9,7 @@ import {
   EntityDataCollection,
   ItemData,
   ItemDataCollection,
+  StaticTerrainData,
   TerrainData,
   TerrainDataCollection
 } from '../../models/entity';
@@ -69,6 +71,21 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   ) as LevelTerrainStore;
 
   /**
+   * Static data service.
+   */
+  protected readonly staticData = this.pluginManager.get(StaticDataService.pluginObjectItem.key) as StaticDataService;
+
+  /**
+   * Entity position index.
+   */
+  protected entityPositionIndex: EntityPositionIndex;
+
+  /**
+   * Static terrain map.
+   */
+  protected staticTerrainMap: StaticTerrainMap;
+
+  /**
    * Get creatures.
    */
   public get creatures(): CreatureDataCollection {
@@ -115,6 +132,13 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Get player position.
+   */
+  public get playerPosition(): MapCellPosition | void {
+    return this.entityPositionIndex.get(UniqueEntityDataId.Player);
+  }
+
+  /**
    * Get seed.
    */
   public get seed(): string {
@@ -138,6 +162,15 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Test if specified map cell position blocks movement.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public blocksMove(mapCellPosition: MapCellPosition): boolean {
+    return this.hasCreature(mapCellPosition) || this.terrainBlocksMove(mapCellPosition);
+  }
+
+  /**
    * Generate level scene config.
    *
    * @param config Level scene configuration generator configuration.
@@ -151,10 +184,44 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   /**
    * Get creature.
    *
-   * @param id Creature id.
+   * @param idOrMapCellPosition Creature id or a map cell position.
    */
-  public getCreature(id: string): CreatureData | void {
-    return this.levelCreaturesStore.getValue().entities[id];
+  public getCreature(idOrMapCellPosition: string | MapCellPosition): CreatureData | void {
+    if (idOrMapCellPosition instanceof MapCellPosition) {
+      const mapCell = this.getMapCell(idOrMapCellPosition);
+
+      if (!mapCell || !mapCell.creatureId) {
+        return;
+      }
+
+      return this.levelCreaturesStore.getValue().entities[mapCell.creatureId];
+    }
+
+    return this.levelCreaturesStore.getValue().entities[idOrMapCellPosition];
+  }
+
+  /**
+   * Get default static terrain data at specified map cell position.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public getDefaultStaticTerrainData(mapCellPosition: MapCellPosition): StaticTerrainData | void {
+    const staticTerrainDataId = this.getDefaultStaticTerrainDataId(mapCellPosition);
+
+    if (!staticTerrainDataId) {
+      return;
+    }
+
+    return this.staticData.terrain.get(staticTerrainDataId);
+  }
+
+  /**
+   * Get default static terrain data id for specified map cell position.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public getDefaultStaticTerrainDataId(mapCellPosition: MapCellPosition): StaticTerrainDataId | void {
+    return this.staticTerrainMap.get(mapCellPosition);
   }
 
   /**
@@ -185,12 +252,50 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
   }
 
   /**
+   * Get static terrain data for specified map cell position.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public getStaticTerrainData(mapCellPosition: MapCellPosition): StaticTerrainData | void {
+    const terrainData = this.getTerrain(mapCellPosition);
+
+    const staticTerrainDataId = terrainData
+      ? terrainData.staticEntityDataId
+      : this.getDefaultStaticTerrainDataId(mapCellPosition);
+
+    if (!staticTerrainDataId) {
+      return;
+    }
+
+    return this.staticData.terrain.get(staticTerrainDataId);
+  }
+
+  /**
    * Get terrain.
    *
-   * @param id Terrain id.
+   * @param idOrMapCellPosition Terrain id or a map cell position.
    */
-  public getTerrain(id: string): TerrainData | void {
-    return this.levelTerrainStore.getValue().entities[id];
+  public getTerrain(idOrMapCellPosition: string | MapCellPosition): TerrainData | void {
+    if (idOrMapCellPosition instanceof MapCellPosition) {
+      const mapCell = this.getMapCell(idOrMapCellPosition);
+
+      if (!mapCell || !mapCell.terrainId) {
+        return;
+      }
+
+      return this.levelTerrainStore.getValue().entities[mapCell.terrainId];
+    }
+
+    return this.levelTerrainStore.getValue().entities[idOrMapCellPosition];
+  }
+
+  /**
+   * Test if specified map cell position has creature.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public hasCreature(mapCellPosition: MapCellPosition): boolean {
+    return !!this.getCreature(mapCellPosition);
   }
 
   /**
@@ -199,7 +304,7 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
    * @param config Level scene configuration.
    */
   public persistLevelSceneConfig(config?: LevelSceneConfig): this {
-    const { id, seed, width, height, map, creatures, items, terrain } = config;
+    const { id, seed, width, height, map, creatures, items, terrain, entityPositionIndex, staticTerrainMap } = config;
 
     this.levelStore.update({ id, seed, width, height, map });
 
@@ -207,6 +312,71 @@ export class LevelService extends Phaser.Plugins.BasePlugin {
     this.levelItemsStore.set(items);
     this.levelTerrainStore.set(terrain);
 
+    this.entityPositionIndex = entityPositionIndex;
+    this.staticTerrainMap = staticTerrainMap;
+
     return this;
+  }
+
+  /**
+   * Test if terrain blocks move at specified map cell position.
+   *
+   * @param mapCellPosition Map cell position.
+   */
+  public terrainBlocksMove(mapCellPosition: MapCellPosition): boolean {
+    const staticTerrainData = this.getStaticTerrainData(mapCellPosition);
+
+    return staticTerrainData && staticTerrainData.blockMove;
+  }
+
+  /**
+   * Update entity position.
+   *
+   * @param id Id.
+   * @param mapCellPosition Map cell position.
+   */
+  public updateEntityPosition(id: string, mapCellPosition: MapCellPosition): void {
+    const currentMapCellPosition = this.entityPositionIndex.get(id);
+
+    if (!currentMapCellPosition) {
+      throw new Error(`Map cell position not found: ${id}`);
+    }
+
+    const sourceMapCellData = this.getMapCell(currentMapCellPosition);
+
+    if (!sourceMapCellData) {
+      throw new Error(`Map cell data not found: ${currentMapCellPosition}`);
+    }
+
+    const destinationMapCellData = this.getMapCell(mapCellPosition) || {};
+
+    if (id === sourceMapCellData.creatureId) {
+      sourceMapCellData.creatureId = undefined;
+      destinationMapCellData.creatureId = id;
+    } else if (Array.isArray(sourceMapCellData.itemIds) && sourceMapCellData.itemIds.includes(id)) {
+      sourceMapCellData.itemIds.splice(sourceMapCellData.itemIds.indexOf(id), 1);
+
+      if (!Array.isArray(destinationMapCellData.itemIds)) {
+        destinationMapCellData.itemIds = [];
+      }
+
+      destinationMapCellData.itemIds.push(id);
+    } else if (id === sourceMapCellData.terrainId) {
+      sourceMapCellData.terrainId = undefined;
+      destinationMapCellData.terrainId = id;
+    } else {
+      throw new Error(`Entity id not found: ${id} - ${currentMapCellPosition}`);
+    }
+
+    this.levelStore.update({
+      map: {
+        ...this.map,
+        [currentMapCellPosition.toString()]: sourceMapCellData,
+        [mapCellPosition.toString()]: destinationMapCellData
+      }
+    });
+
+    currentMapCellPosition.x = mapCellPosition.x;
+    currentMapCellPosition.y = mapCellPosition.y;
   }
 }

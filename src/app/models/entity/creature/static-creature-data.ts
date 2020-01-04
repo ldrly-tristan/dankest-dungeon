@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
+import { StaticCreatureDataId } from '../../../lib/entity';
 import { StaticEntityData } from '../static-entity-data';
-import { StaticCreatureDataId } from './static-creature-data-id.enum';
 
 /**
  * Static creature data interface.

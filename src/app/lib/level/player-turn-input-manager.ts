@@ -1,5 +1,8 @@
 import { Fsm, FsmEventType } from '../../plugins/fsm';
 import { LevelScene } from '../../scenes/play/level';
+import { UniqueEntityDataId } from '../entity';
+import { EntityMoveAction } from '../entity/action';
+import { MapCellPosition } from './map-cell-position';
 
 /**
  * Player turn input manager state enumeration.
@@ -121,8 +124,9 @@ export class PlayerTurnInputManager {
       case 'Home':
       case 'PageDown':
       case 'PageUp':
-      case ' ':
         this.handleMoveInput(key);
+        break;
+      case ' ':
         break;
     }
   }
@@ -141,7 +145,7 @@ export class PlayerTurnInputManager {
         this.handleModalInput(key);
         break;
       default:
-        throw new Error(`Handle input with invalid state: ${this.fsm.currentState}`);
+        throw new Error(`Handling input while in invalid state: ${this.fsm.currentState}`);
     }
   }
 
@@ -187,22 +191,23 @@ export class PlayerTurnInputManager {
       case 'PageUp':
         delta.set(1, -1);
         break;
-      case ' ':
-        break;
     }
 
-    const playerMapCellPosition = this.scene.playerPosition;
+    const playerMapCellPosition = this.scene.level.playerPosition;
 
     if (!playerMapCellPosition) {
       throw new Error('Player map cell position not found');
     }
 
-    if (key === ' ' || !this.scene.blocksMove(playerMapCellPosition.x + delta.x, playerMapCellPosition.y + delta.y)) {
-      /** @todo update level state... */
-      /** @todo queue ui update... */
-      console.log('Move OK');
+    const source = new MapCellPosition(playerMapCellPosition.x, playerMapCellPosition.y);
+    const destination = new MapCellPosition(source.x + delta.x, source.y + delta.y);
+
+    if (!this.scene.level.blocksMove(destination)) {
+      this.scene.entityAction.dispatch(
+        new EntityMoveAction({ active: UniqueEntityDataId.Player, source, destination })
+      );
+
       this.fsm.go(PlayerTurnInputManagerState.Disabled);
-      this.endPlayerTurn();
     }
   }
 
@@ -218,6 +223,12 @@ export class PlayerTurnInputManager {
    */
   protected onDisabled(): void {
     this.scene.input.keyboard.enabled = false;
+
+    if (this.endPlayerTurn) {
+      this.endPlayerTurn();
+    }
+
+    this.endPlayerTurn = undefined;
   }
 
   /**

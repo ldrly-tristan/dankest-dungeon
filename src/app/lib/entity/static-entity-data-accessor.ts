@@ -1,5 +1,6 @@
 import { AssetKey, AssetType } from '../../asset-enums';
-import { StaticEntityData, StaticEntityDataId } from '../../models/entity';
+import { StaticEntityDataId } from '../../lib/entity';
+import { StaticEntityData } from '../../models/entity';
 
 /**
  * Static entity data accessor.

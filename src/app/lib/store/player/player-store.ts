@@ -1,6 +1,7 @@
 import { Store, StoreConfig } from '@datorama/akita';
 
-import { PlayerState, StaticCreatureDataId } from '../../../models/entity';
+import { PlayerState } from '../../../models/entity';
+import { StaticCreatureDataId } from '../../entity';
 import { StoreKey } from '../store-key.enum';
 
 /**

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
+import { StaticItemDataId } from '../../../lib/entity';
 import { StaticEntityData } from '../static-entity-data';
-import { StaticItemDataId } from './static-item-data-id.enum';
 
 /**
  * Static item data interface.

@@ -1,4 +1,6 @@
-import { StaticTerrainDataId } from '../../models/entity';
+import { StaticTerrainDataId } from '../entity';
+import { MapCellPosition } from './map-cell-position';
+
 /**
  * Static terrain map.
  */
@@ -26,11 +28,10 @@ export class StaticTerrainMap {
   /**
    * Get static terrain id at specified position.
    *
-   * @param x X-coordinate.
-   * @param y Y-coordinate.
+   * @param mapCellPosition Map cell position.
    */
-  public get(x: number, y: number): StaticTerrainDataId | void {
-    const position = x + ',' + y;
+  public get(mapCellPosition: MapCellPosition): StaticTerrainDataId | void {
+    const position = mapCellPosition.toString();
 
     if (!this.map.has(position)) {
       return;
@@ -42,12 +43,11 @@ export class StaticTerrainMap {
   /**
    * Set static terrain id at specified position.
    *
-   * @param x X-coordinate.
-   * @param y Y-coordinate.
+   * @param mapCellPosition Map cell position.
    * @param staticTerrainId Static terrain id.
    */
-  public set(x: number, y: number, staticTerrainId: StaticTerrainDataId): this {
-    const position = x + ',' + y;
+  public set(mapCellPosition: MapCellPosition, staticTerrainId: StaticTerrainDataId): this {
+    const position = mapCellPosition.toString();
 
     let index = this.staticTerrainIndex.get(staticTerrainId);
 

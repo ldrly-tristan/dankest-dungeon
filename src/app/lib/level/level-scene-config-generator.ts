@@ -1,7 +1,7 @@
-import { StaticTerrainDataId, UniqueEntityDataId } from '../../models/entity';
 import { LevelSceneConfig, LevelSceneConfigGeneratorConfig, LevelState } from '../../models/level';
 import { LevelService } from '../../services/level';
 import { StaticDataService } from '../../services/static-data';
+import { StaticTerrainDataId, UniqueEntityDataId } from '../entity';
 import { EntityPositionIndex } from './entity-position-index';
 import { MapCellPosition } from './map-cell-position';
 import { generateArenaMap } from './mapgen';
@@ -124,7 +124,7 @@ export class LevelSceneConfigGenerator {
    */
   protected populateStaticTerrainMap(levelSceneConfig: LevelSceneConfig, map: Map<string, number>): this {
     map.forEach((value, position) => {
-      const { x, y } = new MapCellPosition(position);
+      const mapCellPosition = new MapCellPosition(position);
 
       const wallStaticData = this.staticData.terrain.get(StaticTerrainDataId.Wall);
       const floorStaticData = this.staticData.terrain.get(StaticTerrainDataId.Floor);
@@ -135,7 +135,7 @@ export class LevelSceneConfigGenerator {
         throw new Error('Floor static data not found');
       }
 
-      levelSceneConfig.staticTerrainMap.set(x, y, value ? wallStaticData.id : floorStaticData.id);
+      levelSceneConfig.staticTerrainMap.set(mapCellPosition, value ? wallStaticData.id : floorStaticData.id);
     });
 
     return this;

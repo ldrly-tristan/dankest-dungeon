@@ -1,7 +1,7 @@
 import { glyphFontFamily, glyphFontSize } from '../../../consts';
-import { MapCellPosition, PlayerTurnInputManager, Scheduler } from '../../../lib/level';
+import { UniqueEntityDataId } from '../../../lib/entity';
+import { EntityActionManager, MapCellPosition, PlayerTurnInputManager, Scheduler } from '../../../lib/level';
 import { FsmConfig, FsmEventType, FsmScene } from '../../../lib/scene';
-import { StaticTerrainData, StaticTerrainDataId, UniqueEntityDataId } from '../../../models/entity';
 import { LevelSceneConfig } from '../../../models/level';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from '../../../game-objects/glyphmap';
 import { GlyphTexturesService } from '../../../services/glyph-textures';
@@ -20,6 +20,11 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   public readonly add: GlyphmapAwareGameObjectFactory;
 
   /**
+   * Entity action manager.
+   */
+  public readonly entityAction = new EntityActionManager(this);
+
+  /**
    * Glyph textures service.
    */
   public readonly glyphTextures: GlyphTexturesService;
@@ -35,6 +40,11 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   public readonly player: PlayerService;
 
   /**
+   * Scheduler.
+   */
+  public readonly scheduler = new Scheduler();
+
+  /**
    * Static data service.
    */
   public readonly staticData: StaticDataService;
@@ -43,11 +53,6 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    * Entity glyph index.
    */
   protected readonly entityGlyphIndex = new Map<string, Phaser.GameObjects.Image>();
-
-  /**
-   * Entity position index.
-   */
-  protected readonly entityPositionIndex = this.config.entityPositionIndex;
 
   /**
    * Finite state machine configuration.
@@ -89,21 +94,6 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   };
 
   /**
-   * Player turn input manager.
-   */
-  protected playerTurnInput = new PlayerTurnInputManager(this);
-
-  /**
-   * Scheduler.
-   */
-  protected readonly scheduler = new Scheduler();
-
-  /**
-   * Static terrain map.
-   */
-  protected readonly staticTerrainMap = this.config.staticTerrainMap;
-
-  /**
    * Creatures glyph group.
    */
   protected creaturesGlyphGroup: Phaser.GameObjects.Group;
@@ -117,6 +107,11 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    * Items glyph group.
    */
   protected itemsGlyphGroup: Phaser.GameObjects.Group;
+
+  /**
+   * Player turn input manager.
+   */
+  protected playerTurnInput = new PlayerTurnInputManager(this);
 
   /**
    * Terrain glyph group.
@@ -133,17 +128,12 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   }
 
   /**
-   * Get player position.
-   */
-  public get playerPosition(): MapCellPosition | void {
-    return this.entityPositionIndex.get(UniqueEntityDataId.Player);
-  }
-
-  /**
    * Lifecycle method called after init & preload.
    */
   public create(): void {
     this.level.persistLevelSceneConfig(this.config);
+
+    this.createGlyphmap().createEntityGlyphs();
 
     this.scheduler.run((item: string, scheduler: Scheduler) => this.handleScheduledItem(item, scheduler));
   }
@@ -152,86 +142,15 @@ export class LevelScene extends FsmScene<LevelSceneState> {
    * Lifecycle method called before all others.
    */
   public init(): void {
-    this.initGlyphmap()
-      .initGlyphGroups()
-      .initEntityGlyphs()
+    this.initGlyphGroups()
       .initScheduler()
       .initPlayerTurnInputManager();
   }
 
   /**
-   * Test if specified map cell position blocks movement.
-   *
-   * @param x X-coordinate.
-   * @param y Y-coordinate.
+   * Create entity glyphs.
    */
-  public blocksMove(x: number, y: number): boolean {
-    const mapCellPosition = new MapCellPosition(x, y);
-
-    const mapCell = this.level.getMapCell(mapCellPosition);
-
-    let staticTerrainDataId: StaticTerrainDataId | void;
-    let useStatic = true;
-
-    if (mapCell) {
-      const { creatureId, terrainId } = mapCell;
-
-      if (creatureId) {
-        return true;
-      }
-
-      if (terrainId) {
-        const terrainData = this.level.getTerrain(terrainId);
-
-        if (!terrainData) {
-          throw new Error(`Terrain entity data not found: ${terrainId}`);
-        }
-
-        staticTerrainDataId = terrainData.staticEntityDataId as StaticTerrainDataId;
-        useStatic = false;
-      }
-    }
-
-    if (useStatic) {
-      staticTerrainDataId = this.staticTerrainMap.get(x, y);
-    }
-
-    if (!staticTerrainDataId) {
-      throw new Error(`Static terrain data id not found: ${mapCellPosition}`);
-    }
-
-    const staticTerrainData = this.staticData.terrain.get(staticTerrainDataId);
-
-    if (!staticTerrainData) {
-      throw new Error(`Static terrain data not found: ${mapCellPosition}`);
-    }
-
-    return staticTerrainData.blockMove;
-  }
-
-  /**
-   * Handle scheduled item.
-   *
-   * @param item Item.
-   * @param scheduler Scheduler.
-   */
-  protected handleScheduledItem(item: string, scheduler: Scheduler): Promise<void> | void {
-    if (item === UniqueEntityDataId.Player) {
-      switch (this.fsm.currentState) {
-        case LevelSceneState.Init:
-          return new Promise(endPlayerTurn => this.fsm.go(LevelSceneState.PlayerTurn, endPlayerTurn));
-        case LevelSceneState.ProcessNonPlayerTurns:
-          return new Promise(endPlayerTurn => this.fsm.go(LevelSceneState.UpdateUi, endPlayerTurn));
-      }
-    }
-
-    /** @todo handle non player action... */
-  }
-
-  /**
-   * Initialize entity glyphs.
-   */
-  protected initEntityGlyphs(): this {
+  protected createEntityGlyphs(): this {
     Object.entries(this.level.map).forEach(data => {
       const mapCellPosition = new MapCellPosition(data[0]);
       const mapCell = data[1];
@@ -269,6 +188,65 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   }
 
   /**
+   * Create glyphmap.
+   */
+  protected createGlyphmap(): this {
+    const { width, height } = this.config;
+
+    this.glyphmap = this.add.glyphmap(
+      0,
+      0,
+      width,
+      height,
+      false,
+      glyphFontSize,
+      1,
+      0,
+      false,
+      glyphFontFamily,
+      '',
+      '#fff',
+      '#000'
+    );
+
+    for (let x = 0; x < width; ++x) {
+      for (let y = 0; y < height; ++y) {
+        const mapCellPosition = new MapCellPosition(x, y);
+        const staticTerrainData = this.level.getDefaultStaticTerrainData(mapCellPosition);
+
+        if (!staticTerrainData) {
+          throw new Error(`Static terrain data not found: ${mapCellPosition}`);
+        }
+
+        const { ch, fg, bg } = staticTerrainData.glyph;
+
+        this.glyphmap.putGlyphAt(x, y, ch, fg, bg);
+      }
+    }
+
+    return this;
+  }
+
+  /**
+   * Handle scheduled item.
+   *
+   * @param item Item.
+   * @param scheduler Scheduler.
+   */
+  protected handleScheduledItem(item: string, scheduler: Scheduler): Promise<void> | void {
+    if (item === UniqueEntityDataId.Player) {
+      switch (this.fsm.currentState) {
+        case LevelSceneState.Init:
+          return new Promise(endPlayerTurn => this.fsm.go(LevelSceneState.PlayerTurn, endPlayerTurn));
+        case LevelSceneState.ProcessNonPlayerTurns:
+          return new Promise(endPlayerTurn => this.fsm.go(LevelSceneState.UpdateUi, endPlayerTurn));
+      }
+    }
+
+    /** @todo handle non player action... */
+  }
+
+  /**
    * Initialize glyph groups.
    */
   protected initGlyphGroups(): this {
@@ -292,48 +270,8 @@ export class LevelScene extends FsmScene<LevelSceneState> {
   }
 
   /**
-   * Initialize glyphmap.
+   * Initialize player turn input manager.
    */
-  protected initGlyphmap(): this {
-    const { width, height } = this.config;
-
-    this.glyphmap = this.add.glyphmap(
-      0,
-      0,
-      width,
-      height,
-      false,
-      glyphFontSize,
-      1,
-      0,
-      false,
-      glyphFontFamily,
-      '',
-      '#fff',
-      '#000'
-    );
-
-    for (let x = 0; x < width; ++x) {
-      for (let y = 0; y < height; ++y) {
-        const staticTerrainId = this.staticTerrainMap.get(x, y);
-
-        if (staticTerrainId) {
-          const staticTerrainData = this.staticData.terrain.get(staticTerrainId);
-
-          if (!staticTerrainData) {
-            throw new Error(`Static terrain data not found: ${staticTerrainId}`);
-          }
-
-          const { ch, fg, bg } = staticTerrainData.glyph;
-
-          this.glyphmap.putGlyphAt(x, y, ch, fg, bg);
-        }
-      }
-    }
-
-    return this;
-  }
-
   protected initPlayerTurnInputManager(): this {
     this.playerTurnInput.init();
     return this;

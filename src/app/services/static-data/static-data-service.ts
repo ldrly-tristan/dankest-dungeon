@@ -1,16 +1,18 @@
 import { AssetKey, AssetType } from '../../asset-enums';
-import { StaticEntityDataAccessor } from '../../lib/entity';
+import {
+  StaticCreatureDataId,
+  StaticEntityDataAccessor,
+  StaticEntityDataId,
+  StaticItemDataId,
+  StaticTerrainDataId
+} from '../../lib/entity';
 import {
   StaticCreatureData,
-  StaticCreatureDataId,
   StaticCreatureDataIndex,
   StaticEntityData,
-  StaticEntityDataId,
   StaticItemData,
-  StaticItemDataId,
   StaticItemDataIndex,
   StaticTerrainData,
-  StaticTerrainDataId,
   StaticTerrainDataIndex
 } from '../../models/entity';
 

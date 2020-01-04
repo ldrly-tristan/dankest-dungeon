@@ -1,3 +1,4 @@
+export { EntityActionManager } from './entity-action-manager';
 export { EntityPositionIndex } from './entity-position-index';
 export { LevelSceneConfigGenerator } from './level-scene-config-generator';
 export { MapCellPosition } from './map-cell-position';
