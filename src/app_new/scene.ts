@@ -53,8 +53,7 @@ export class Scene extends Phaser.Scene {
   public constructor() {
     super({
       key: 'Main',
-      active: true,
-      pack: { key: manifest.key, url: manifest.url, dataKey: manifest.defaultDataKey }
+      active: true
     });
   }
 
@@ -62,14 +61,14 @@ export class Scene extends Phaser.Scene {
    * Initialize scene; called after scene start event.
    */
   public init(): void {
-    return;
+    this.initLoaderGlyphmap();
   }
 
   /**
    * Load assets; called after init().
    */
   public preload(): void {
-    return;
+    this.load.pack({ key: manifest.key, url: manifest.url, dataKey: manifest.defaultDataKey });
   }
 
   /**
@@ -90,6 +89,52 @@ export class Scene extends Phaser.Scene {
    */
   public update(time: number, delta: number): void {
     return;
+  }
+
+  /**
+   * Initialize loader glyphmap.
+   */
+  private initLoaderGlyphmap(): this {
+    const loaderGlyphmap = this.add
+      .glyphmap(0, 0, 12, 1, false, glyphConfig.fontSize, 1, 0, false, glyphConfig.fontFamily, '', '#fff', '#000')
+      .setScrollFactor(0) // Fix to camera.
+      .setActive(false) // Keep inactive unless in use.
+      .setAlpha(0); // Keep hidden unless in use.
+
+    this.load
+      .on(Phaser.Loader.Events.START, () => {
+        loaderGlyphmap.setPosition(this.cameras.main.centerX, this.cameras.main.height - loaderGlyphmap.height / 2);
+        const status = `[${' '.repeat(10)}]`;
+
+        loaderGlyphmap.setActive(true).setAlpha(1);
+
+        for (let x = 0; x < status.length; ++x) {
+          loaderGlyphmap.putGlyphAt(x, 0, status.charAt(x));
+        }
+      })
+      .on(Phaser.Loader.Events.PROGRESS, (progress: number) => {
+        loaderGlyphmap.setPosition(this.cameras.main.centerX, this.cameras.main.height - loaderGlyphmap.height / 2);
+        const complete = Math.floor(10 * progress);
+
+        const status = `[${'#'.repeat(complete)}${' '.repeat(10 - complete)}]`;
+
+        for (let x = 0; x < status.length; ++x) {
+          loaderGlyphmap.putGlyphAt(x, 0, status.charAt(x));
+        }
+      })
+      .on(Phaser.Loader.Events.COMPLETE, () =>
+        this.tweens.add({
+          targets: loaderGlyphmap,
+          alpha: 0,
+          ease: 'Linear',
+          duration: 1500,
+          yoyo: false,
+          repeat: 0,
+          onComplete: () => (loaderGlyphmap.active = false)
+        })
+      );
+
+    return this;
   }
 
   /**
@@ -171,6 +216,7 @@ export class Scene extends Phaser.Scene {
 
     if (from === GameState.Init) {
       const style = document.getElementById(appConfig.splashContainerDomId).style;
+      style.opacity = '1';
 
       // Fade out splash container.
       this.tweens.add({
@@ -191,6 +237,8 @@ export class Scene extends Phaser.Scene {
         onComplete: () => (style.display = 'none')
       });
     }
+
+    this.cameras.main.startFollow(this.titleGlyphmap);
 
     // Fade in title glyphmap.
     this.tweens.add({

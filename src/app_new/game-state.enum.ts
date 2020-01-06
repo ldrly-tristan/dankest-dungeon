@@ -10,5 +10,10 @@ export enum GameState {
   /**
    * Title screen state.
    */
-  Title = 'Title'
+  Title = 'Title',
+
+  /**
+   * Decision state to either continue a game or create a new game.
+   */
+  NewOrContinue = 'NewOrContinue'
 }
