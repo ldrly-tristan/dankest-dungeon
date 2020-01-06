@@ -1,6 +1,5 @@
-[
-  {
-    "id": "Floor",
+{
+  "Floor": {
     "name": "Floor",
     "glyph": {
       "ch": "·",
@@ -9,8 +8,7 @@
     "blockMove": false,
     "blockLight": false
   },
-  {
-    "id": "Wall",
+  "Wall": {
     "name": "Wall",
     "glyph": {
       "ch": "#",
@@ -19,4 +17,4 @@
     "blockMove": true,
     "blockLight": true
   }
-]
+}

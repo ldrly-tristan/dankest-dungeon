@@ -7,4 +7,4 @@ if (process.env.NODE_ENV === 'production') {
   enableAkitaProdMode();
 }
 
-phaserFactory().then(() => import(/* webpackChunkName: "app" */ './app').then(({ App }) => new App()));
+phaserFactory().then(() => import(/* webpackChunkName: "app" */ './app_new').then(({ App }) => new App()));

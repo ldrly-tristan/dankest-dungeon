@@ -2,11 +2,6 @@
   "core": {
     "files": [
       {
-        "type": "html",
-        "key": "create-player-name-input",
-        "url": "assets/html/create-player/name-input.html"
-      },
-      {
         "type": "json",
         "key": "creatures",
         "url": "assets/json/creatures.json"
@@ -20,6 +15,11 @@
         "type": "json",
         "key": "terrain",
         "url": "assets/json/terrain.json"
+      },
+      {
+        "type": "json",
+        "key": "title",
+        "url": "assets/json/title.json"
       }
     ]
   }

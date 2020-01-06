@@ -1,10 +1,9 @@
-[
-  {
-    "id": "Player",
+{
+  "Player": {
     "name": "Player",
     "glyph": {
       "ch": "@",
       "fg": "#fff"
     }
   }
-]
+}

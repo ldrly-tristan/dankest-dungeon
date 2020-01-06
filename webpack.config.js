@@ -10,6 +10,8 @@ const webpack = require('webpack');
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProd = nodeEnv === 'production';
 
+const title = 'Dankest Dungeon';
+
 module.exports = {
   mode: isProd ? 'production' : 'development',
 
@@ -67,6 +69,8 @@ module.exports = {
 
   plugins: [
     new webpack.DefinePlugin({
+      APP_TITLE: JSON.stringify(title),
+      APP_VERSION: JSON.stringify(require('./package.json').version),
       'process.env': {
         NODE_ENV: JSON.stringify(nodeEnv)
       },
@@ -78,7 +82,7 @@ module.exports = {
       'typeof FEATURE_SOUND': JSON.stringify(true)
     }),
     new HtmlWebpackPlugin({
-      title: 'Dankest Dungeon',
+      title,
       template: '!!ejs-loader!src/index.html',
       filename: 'index.html',
       inject: 'body',
