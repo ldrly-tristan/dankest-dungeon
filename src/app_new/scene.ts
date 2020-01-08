@@ -2,6 +2,7 @@ import { app as appConfig, cache as cacheConfig, glyph as glyphConfig, manifest 
 import { Fsm, FsmEventType } from './fsm';
 import { GameState } from './game-state.enum';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from './glyphmap';
+import { PlayerInputManager } from './player';
 
 /**
  * Main game scene. Orchestrates other scenes, services, & overall game state.
@@ -18,7 +19,8 @@ export class Scene extends Phaser.Scene {
   private readonly fsm = new Fsm<GameState>({
     startState: GameState.Init, // Phaser systems initializing, assets loading.
     transitions: [
-      { from: GameState.Init, to: GameState.Title } // Always show title after initialization is complete.
+      { from: GameState.Init, to: GameState.Title }, // Always show title after initialization is complete.
+      { from: GameState.Title, to: GameState.NewOrContinue }
     ],
     events: [
       // On enter title game state event.
@@ -38,9 +40,32 @@ export class Scene extends Phaser.Scene {
         state: GameState.Title,
         type: FsmEventType.OnExit,
         handler: (to?: GameState): boolean => this.onExitTitleGameState(to)
+      },
+      // On enter new or continue game state event.
+      {
+        state: GameState.NewOrContinue,
+        type: FsmEventType.OnEnter,
+        handler: (from?: GameState, data?: any): boolean => this.onEnterNewOrContinueGameState(from, data)
+      },
+      // On new or continue game state event.
+      {
+        state: GameState.NewOrContinue,
+        type: FsmEventType.On,
+        handler: (from?: GameState, data?: any): void => this.onNewOrContinueGameState(from, data)
+      },
+      // On exit new or continue game state event.
+      {
+        state: GameState.NewOrContinue,
+        type: FsmEventType.OnExit,
+        handler: (to?: GameState): boolean => this.onExitNewOrContinueGameState(to)
       }
     ]
   });
+
+  /**
+   * Player input manager.
+   */
+  private playerInputManager: PlayerInputManager;
 
   /**
    * Title glyphmap.
@@ -61,7 +86,7 @@ export class Scene extends Phaser.Scene {
    * Initialize scene; called after scene start event.
    */
   public init(): void {
-    this.initLoaderGlyphmap();
+    this.initLoaderGlyphmap().initPlayerInputManager();
   }
 
   /**
@@ -138,7 +163,18 @@ export class Scene extends Phaser.Scene {
   }
 
   /**
+   * Initialize player input manager.
+   */
+  private initPlayerInputManager(): this {
+    this.playerInputManager = new PlayerInputManager(this.input.keyboard);
+    return this;
+  }
+
+  /**
    * On enter title game state event handler. Creates title glyphmap if not already available.
+   *
+   * @param from From state.
+   * @param data Data.
    */
   private onEnterTitleGameState(from?: GameState, data?: any): boolean {
     if (!this.titleGlyphmap) {
@@ -210,6 +246,9 @@ export class Scene extends Phaser.Scene {
 
   /**
    * On title game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
    */
   private onTitleGameState(from?: GameState, data?: any): void {
     const fadeDuration = 1500;
@@ -248,15 +287,16 @@ export class Scene extends Phaser.Scene {
       duration: fadeDuration,
       yoyo: false,
       repeat: 0,
-      onComplete: () => {
-        /** @todo listen for player keyboard input... */
-        return;
-      }
+      onComplete: () =>
+        // Enable player input, trigger transition from title screen.
+        this.playerInputManager.enable(this.fsm.currentState, () => this.fsm.go(GameState.NewOrContinue))
     });
   }
 
   /**
    * On exit title game state event handler.
+   *
+   * @param to To state.
    */
   private onExitTitleGameState(to?: GameState): boolean {
     // Fade out title glyphmap.
@@ -270,6 +310,35 @@ export class Scene extends Phaser.Scene {
       onComplete: () => (this.titleGlyphmap.active = false)
     });
 
+    return true;
+  }
+
+  /**
+   * On enter new or continue game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
+   */
+  private onEnterNewOrContinueGameState(from?: GameState, data?: any): boolean {
+    return true;
+  }
+
+  /**
+   * On new or continue game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
+   */
+  private onNewOrContinueGameState(from?: GameState, data?: any): void {
+    return;
+  }
+
+  /**
+   * On exit new or continue game state event handler.
+   *
+   * @param to To state.
+   */
+  private onExitNewOrContinueGameState(to?: GameState): boolean {
     return true;
   }
 }
