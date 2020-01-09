@@ -29,7 +29,7 @@ export class Fsm<T> {
           this.fsm.onEnter(e.state, e.handler);
           break;
         case FsmEventType.OnExit:
-          this.fsm.onEnter(e.state, e.handler);
+          this.fsm.onExit(e.state, e.handler);
           break;
       }
     });

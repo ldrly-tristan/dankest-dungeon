@@ -302,7 +302,7 @@ export class Scene extends Phaser.Scene {
     // Fade out title glyphmap.
     this.tweens.add({
       targets: this.titleGlyphmap,
-      alpha: 1,
+      alpha: 0,
       ease: 'Linear',
       duration: 750,
       yoyo: false,
