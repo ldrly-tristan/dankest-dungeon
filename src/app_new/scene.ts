@@ -1,8 +1,17 @@
-import { app as appConfig, cache as cacheConfig, glyph as glyphConfig, manifest } from './config';
+import { persistState } from '@datorama/akita';
+
+import {
+  app as appConfig,
+  cache as cacheConfig,
+  glyph as glyphConfig,
+  manifest,
+  storage as storageConfig
+} from './config';
 import { Fsm, FsmEventType } from './fsm';
 import { GameState } from './game-state.enum';
 import { Glyphmap, GlyphmapAwareGameObjectFactory } from './glyphmap';
-import { PlayerInputManager } from './player';
+import { LevelsStore } from './level';
+import { PlayerInputManager, PlayerStore } from './player';
 
 /**
  * Main game scene. Orchestrates other scenes, services, & overall game state.
@@ -61,6 +70,21 @@ export class Scene extends Phaser.Scene {
       }
     ]
   });
+
+  /**
+   * Storage accessor.
+   */
+  private readonly storage = persistState(storageConfig);
+
+  /**
+   * Player store.
+   */
+  private readonly playerStore = new PlayerStore();
+
+  /**
+   * Level store.
+   */
+  private readonly levelStore = new LevelsStore();
 
   /**
    * Player input manager.
@@ -330,7 +354,13 @@ export class Scene extends Phaser.Scene {
    * @param data Data.
    */
   private onNewOrContinueGameState(from?: GameState, data?: any): void {
-    return;
+    if (Object.keys(this.playerStore.getValue()).length === 0) {
+      /** @todo new game... */
+      this.storage.clearStore(this.levelStore.storeName);
+      this.levelStore.reset();
+    } else {
+      /** @todo continue game... */
+    }
   }
 
   /**
