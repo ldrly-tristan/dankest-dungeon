@@ -29,7 +29,7 @@ export class Dice {
    *
    * @param rnd Random data generator.
    */
-  public constructor(private rnd: Phaser.Math.RandomDataGenerator) {}
+  public constructor(private readonly rnd: Phaser.Math.RandomDataGenerator) {}
 
   /**
    * Roll dice.

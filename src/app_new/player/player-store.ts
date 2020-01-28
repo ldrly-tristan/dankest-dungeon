@@ -11,6 +11,6 @@ export class PlayerStore extends Store<PlayerState> {
    * Instantiate player store.
    */
   public constructor() {
-    super({});
+    super({}, { resettable: true });
   }
 }

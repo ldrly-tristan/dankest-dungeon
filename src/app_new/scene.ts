@@ -29,7 +29,11 @@ export class Scene extends Phaser.Scene {
     startState: GameState.Init, // Phaser systems initializing, assets loading.
     transitions: [
       { from: GameState.Init, to: GameState.Title }, // Always show title after initialization is complete.
-      { from: GameState.Title, to: GameState.NewOrContinue }
+      { from: GameState.Title, to: GameState.NewOrContinue },
+      { from: GameState.NewOrContinue, to: GameState.New },
+      { from: GameState.NewOrContinue, to: GameState.Continue },
+      { from: GameState.New, to: GameState.Play },
+      { from: GameState.Continue, to: GameState.Play }
     ],
     events: [
       // On enter title game state event.
@@ -67,6 +71,42 @@ export class Scene extends Phaser.Scene {
         state: GameState.NewOrContinue,
         type: FsmEventType.OnExit,
         handler: (to?: GameState): boolean => this.onExitNewOrContinueGameState(to)
+      },
+      // On enter new game state event.
+      {
+        state: GameState.New,
+        type: FsmEventType.OnEnter,
+        handler: (from?: GameState, data?: any): boolean => this.onEnterNewGameState(from, data)
+      },
+      // On new game state event.
+      {
+        state: GameState.New,
+        type: FsmEventType.On,
+        handler: (from?: GameState, data?: any): void => this.onNewGameState(from, data)
+      },
+      // On exit new game state event.
+      {
+        state: GameState.New,
+        type: FsmEventType.OnExit,
+        handler: (to?: GameState): boolean => this.onExitNewGameState(to)
+      },
+      // On enter continue game state event.
+      {
+        state: GameState.Continue,
+        type: FsmEventType.OnEnter,
+        handler: (from?: GameState, data?: any): boolean => this.onEnterContinueGameState(from, data)
+      },
+      // On continue game state event.
+      {
+        state: GameState.Continue,
+        type: FsmEventType.On,
+        handler: (from?: GameState, data?: any): void => this.onContinueGameState(from, data)
+      },
+      // On exit continue game state event.
+      {
+        state: GameState.Continue,
+        type: FsmEventType.OnExit,
+        handler: (to?: GameState): boolean => this.onExitContinueGameState(to)
       }
     ]
   });
@@ -82,9 +122,9 @@ export class Scene extends Phaser.Scene {
   private readonly playerStore = new PlayerStore();
 
   /**
-   * Level store.
+   * Levels store.
    */
-  private readonly levelStore = new LevelsStore();
+  private readonly levelsStore = new LevelsStore();
 
   /**
    * Player input manager.
@@ -355,11 +395,9 @@ export class Scene extends Phaser.Scene {
    */
   private onNewOrContinueGameState(from?: GameState, data?: any): void {
     if (Object.keys(this.playerStore.getValue()).length === 0) {
-      /** @todo new game... */
-      this.storage.clearStore(this.levelStore.storeName);
-      this.levelStore.reset();
+      this.fsm.go(GameState.New);
     } else {
-      /** @todo continue game... */
+      this.fsm.go(GameState.Continue);
     }
   }
 
@@ -369,6 +407,67 @@ export class Scene extends Phaser.Scene {
    * @param to To state.
    */
   private onExitNewOrContinueGameState(to?: GameState): boolean {
+    return true;
+  }
+
+  /**
+   * On enter new game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
+   */
+  private onEnterNewGameState(from?: GameState, data?: any): boolean {
+    this.storage.clearStore(this.levelsStore.storeName);
+    this.levelsStore.reset();
+
+    return true;
+  }
+
+  /**
+   * On new game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
+   */
+  private onNewGameState(from?: GameState, data?: any): void {
+    return;
+  }
+
+  /**
+   * On exit new game state event handler.
+   *
+   * @param to To state.
+   */
+  private onExitNewGameState(to?: GameState): boolean {
+    return true;
+  }
+
+  /**
+   * On enter continue game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
+   */
+  private onEnterContinueGameState(from?: GameState, data?: any): boolean {
+    return true;
+  }
+
+  /**
+   * On continue game state event handler.
+   *
+   * @param from From state.
+   * @param data Data.
+   */
+  private onContinueGameState(from?: GameState, data?: any): void {
+    return;
+  }
+
+  /**
+   * On exit continue game state event handler.
+   *
+   * @param to To state.
+   */
+  private onExitContinueGameState(to?: GameState): boolean {
     return true;
   }
 }

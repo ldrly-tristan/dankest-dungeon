@@ -15,5 +15,20 @@ export enum GameState {
   /**
    * Decision state to either continue a game or create a new game.
    */
-  NewOrContinue = 'NewOrContinue'
+  NewOrContinue = 'NewOrContinue',
+
+  /**
+   * Create new game state.
+   */
+  New = 'New',
+
+  /**
+   * Continue current game state.
+   */
+  Continue = 'Continue',
+
+  /**
+   * Play game state
+   */
+  Play = 'Play'
 }
